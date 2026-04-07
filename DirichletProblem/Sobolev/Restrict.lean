@@ -14,7 +14,6 @@ In this file we define the space `H^s(Ω)` and prove basic facts. -/
 variable {𝕜 E F : Type*}
   [RCLike 𝕜]
   [NormedAddCommGroup E] [NormedAddCommGroup F]
-  [InnerProductSpace ℝ E] [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
 
 open FourierTransform TemperedDistribution ENNReal MeasureTheory TopologicalSpace
 open scoped SchwartzMap CompactConvergenceCLM
@@ -31,7 +30,18 @@ open scoped MDDistributions
 
 namespace ContDiffMapSupportedIn
 
-variable [NormedSpace ℝ F] [NormedSpace 𝕜 F]
+private
+theorem exists_norm_pow_le (K : Compacts E) (n : ℕ) : ∃ (C : ℝ), 0 ≤ C ∧ ∀ x ∈ K, ‖x‖ ^ n ≤ C := by
+  obtain ⟨r, hr⟩ := Bornology.IsBounded.subset_ball K.isCompact.isBounded 0
+  use (max 1 r) ^ n, by positivity
+  intro x hx
+  gcongr
+  specialize hr hx
+  rw [mem_ball_iff_norm, sub_zero] at hr
+  grw [hr]
+  exact Std.right_le_max
+
+variable [NormedSpace ℝ F] [NormedSpace 𝕜 F] [NormedSpace ℝ E]
 
 variable (𝕜 F) in
 def toSchwartzMapLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →ₗ[𝕜] 𝓢(E, F) where
@@ -49,9 +59,6 @@ theorem toSchwartzMapLM_apply_apply {K : Compacts E}
     (f : ContDiffMapSupportedIn E F ⊤ K) (x : E) :
     f.toSchwartzMapLM 𝕜 F K x = f x := rfl
 
-theorem foo (K : Compacts E) (n : ℕ) : ∃ (C : ℝ), 0 ≤ C ∧ ∀ x ∈ K, ‖x‖ ^ n ≤ C := by
-  sorry
-
 variable (𝕜) in
 def toSchwartzMapCLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →L[𝕜] 𝓢(E, F) where
   toLinearMap := toSchwartzMapLM 𝕜 F K
@@ -59,7 +66,7 @@ def toSchwartzMapCLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →L[�
     apply WithSeminorms.continuous_of_isBounded (ContDiffMapSupportedIn.withSeminorms 𝕜 ..)
       (schwartz_withSeminorms 𝕜 E F) _
     rintro ⟨n, k⟩
-    obtain ⟨C, hC_pos, hC⟩ := foo K n
+    obtain ⟨C, hC_pos, hC⟩ := exists_norm_pow_le K n
     use {k}, ⟨C, hC_pos⟩, fun f ↦ ?_
     simp only [SchwartzMap.schwartzSeminormFamily_apply, Seminorm.comp_apply,
       Finset.sup_singleton, Seminorm.smul_apply, NNReal.smul_def, NNReal.coe_mk, smul_eq_mul]
@@ -81,18 +88,24 @@ end ContDiffMapSupportedIn
 
 namespace TestFunction
 
-variable [NormedSpace ℝ F] [NormedSpace 𝕜 F]
+variable [NormedSpace ℝ E] [NormedSpace ℝ F] [NormedSpace 𝕜 F]
 
 variable (𝕜) in
-def toSchwartzMapCLM (Ω : Opens E) : TestFunction Ω F ⊤ →L[𝕜] 𝓢(E, F) where
-  toFun f := f.hasCompactSupport.toSchwartzMap f.contDiff
-  map_add' f g := by ext; simp
-  map_smul' c f := by ext; simp
-  cont := by
+def toSchwartzMapCLM (Ω : Opens E) : TestFunction Ω F ⊤ →L[𝕜] 𝓢(E, F) :=
+  TestFunction.limitCLM 𝕜 (fun f ↦ f.hasCompactSupport.toSchwartzMap f.contDiff)
+    (fun K _ ↦ ContDiffMapSupportedIn.toSchwartzMapCLM 𝕜 K) (by intros; rfl)
 
-    sorry
+@[simp]
+theorem toSchwartzMapCLM_apply {Ω : Opens E} (f : TestFunction Ω F ⊤) (x : E) :
+  f.toSchwartzMapCLM 𝕜 Ω x = f x := rfl
+
+@[simp]
+theorem coe_toSchwartzMapCLM {Ω : Opens E} (f : TestFunction Ω F ⊤) :
+  (f.toSchwartzMapCLM 𝕜 Ω : E → F) = f := rfl
 
 end TestFunction
+
+variable [InnerProductSpace ℝ E] [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
 
 namespace TemperedDistribution
 

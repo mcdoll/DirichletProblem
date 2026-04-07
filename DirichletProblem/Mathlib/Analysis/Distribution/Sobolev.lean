@@ -180,7 +180,22 @@ theorem MemSobolev.smul {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] (c : �
   obtain ⟨f', hf⟩ := hf
   use c • f'
   rw [← Lp.toTemperedDistributionCLM_apply]
-  simp [hf]
+  simp [hf, Lp.toTemperedDistributionCLM_apply]
+
+/-variable {𝕜 : Type*} [NormedField 𝕜] [NormedSpace 𝕜 F] [NormedSpace 𝕜 ℂ]
+  [SMulCommClass ℝ 𝕜 F] [SMulCommClass ℂ 𝕜 F] [IsScalarTower 𝕜 ℂ F]
+
+variable {M : Type*} [NormedRing M] [Module M F] [SMulCommClass ℂ M F]
+    [ContinuousConstSMul M F] [IsBoundedSMul M F]
+--set_option trace.Meta.synthInstance true
+theorem MemSobolev.smul {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] (c : 𝕜) {f : 𝓢'(E, F)}
+    (hf : MemSobolev s p f) : MemSobolev s p (c • f) := by
+  obtain ⟨f', hf⟩ := hf
+  use c • f'
+  rw [← Lp.toTemperedDistributionCLM_apply]
+  simp only [(Lp.toTemperedDistributionCLM F volume p).map_smul_of_tower , hf,
+    Lp.toTemperedDistributionCLM_apply]
+-/
 
 variable (E F) in
 @[simp]
