@@ -61,12 +61,12 @@ where finally
   · obtain ⟨c, _hc, s, hs₁, hs₂⟩ := isBigO_cocompact_iff.mp hf'
     simp only [Set.mem_compl_iff, norm_pow, norm_norm] at hs₂
     set C₁ := ∫ (a : E) in s, ‖f a‖ ∂μ
-    have hC₁ : 0 ≤ C₁ := by positivity
     set C₂ := c * 2 ^ μ.integrablePower * ∫ (x : E), ((1 + ‖x‖) ^ μ.integrablePower)⁻¹ ∂μ
-    use {(0,0), (k + μ.integrablePower, 0)}, 2 * (C₁ + C₂), by positivity
+    use {(0, 0), (k + μ.integrablePower, 0)}, (C₁ + C₂) * 2, by positivity
     intro g
     set k₁ := g.seminorm ℂ 0 0
     set k₂ := g.seminorm ℂ (k + μ.integrablePower) 0
+    -- Bounding the integral on the compact set using local integrability
     have hs : ‖∫ x in s, g x • f x ∂μ‖ ≤ C₁ * k₁ := calc
       _ ≤ ∫ x in s, ‖g x • f x‖ ∂μ := by
         grw [MeasureTheory.norm_integral_le_integral_norm]
@@ -80,6 +80,7 @@ where finally
         grw [norm_le_seminorm ℂ g]
       _ ≤ _ := by
         rw [integral_const_mul, mul_comm]
+    -- Bounding the integral on the complement using the polynomial growth and Schwartz-ness
     have hsc : ‖∫ (x : E) in sᶜ, g x • f x ∂μ‖ ≤ C₂ * (k₁ + k₂) := calc
       _ ≤ ∫ x in sᶜ, ‖g x • f x‖ ∂μ := by
         grw [MeasureTheory.norm_integral_le_integral_norm]
@@ -110,20 +111,17 @@ where finally
         rw [← MeasureTheory.integral_add_compl₀ hs₁.nullMeasurableSet
           (hf.integrable_schwartzMap_smul hf' g)]
         apply norm_add_le
-      _ ≤ C₁ * k₁ + C₂ * (k₁ + k₂) := by
+      _ ≤ (C₁ + C₂) * (k₁ + k₂) := by
         grw [hs, hsc]
-      _ = (C₁ + C₂) * k₁ + C₂ * k₂ := by ring
-      _ ≤ (C₁ + C₂) * k₁ + (C₁ + C₂) * k₂ := by
+        ring_nf
         gcongr
-        grw [← hC₁]
-        simp
-      _ = (C₁ + C₂) * (k₁ + k₂) := by ring
+        rw [le_add_iff_nonneg_right]
+        positivity
       _ ≤ (C₁ + C₂) * (2 * max k₁ k₂) := by
         gcongr
         grind
-      _ = 2 * (C₁ + C₂) * (max k₁ k₂) := by ring
       _ = _ := by
-        simp [k₁, k₂]
+        simp [k₁, k₂, mul_assoc]
 
 @[simp]
 theorem toTemperedDistribution_apply {f : E → F} {k : ℕ} (hf : LocallyIntegrable f μ)
