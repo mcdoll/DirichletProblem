@@ -2,6 +2,8 @@ module
 
 public import Mathlib.Analysis.Distribution.Distribution
 public import DirichletProblem.Mathlib.Analysis.Distribution.Sobolev
+public import DirichletProblem.Sobolev.SupportedIn
+public import Mathlib.Analysis.Distribution.Support
 
 /-! # Sobolev spaces on domains via restriction
 
@@ -103,9 +105,13 @@ theorem toSchwartzMapCLM_apply {Ω : Opens E} (f : TestFunction Ω F ⊤) (x : E
 theorem coe_toSchwartzMapCLM {Ω : Opens E} (f : TestFunction Ω F ⊤) :
   (f.toSchwartzMapCLM 𝕜 Ω : E → F) = f := rfl
 
+theorem tsupport_toSchwartzMapCLM_subset {Ω : Opens E} (f : TestFunction Ω F ⊤) :
+    tsupport (f.toSchwartzMapCLM 𝕜 Ω) ⊆ Ω :=
+  f.tsupport_subset
+
 end TestFunction
 
-variable [InnerProductSpace ℝ E] [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
+variable [InnerProductSpace ℝ E]
 
 namespace TemperedDistribution
 
@@ -123,7 +129,36 @@ def restrict (Ω : Opens E) : 𝓢'(E, F) →ₗ[ℂ] 𝓓'(Ω, F) where
   map_add' u v := rfl
   map_smul' c u := rfl
 
+variable {Ω : Opens E}
+
+@[simp]
+theorem restrict_apply (u : 𝓢'(E, F)) (f : TestFunction Ω ℂ ⊤) :
+    u.restrict Ω f = u (f.toSchwartzMapCLM ℂ Ω) := rfl
+
+open Distribution
+
+theorem bar' {u : 𝓢'(E, F)} : IsVanishingOn u (dsupport u)ᶜ := by
+  -- your proof is in another castle (PR)
+  sorry
+
+theorem bar {u : 𝓢'(E, F)} (hu : dsupport u ⊆ Ωᶜ) : IsVanishingOn u Ω := by
+  by_contra
+  rw [not_isVanishingOn_iff] at this
+  obtain ⟨f, hf₁, hf₂⟩ := this
+  -- your proof is in another castle (PR)
+  sorry
+
+theorem foo {u : 𝓢'(E, F)} (hu : dsupport u ⊆ Ωᶜ) : u.restrict Ω = 0 := by
+  ext f
+  simp only [u.restrict_apply, UniformConvergenceCLM.coe_zero, Pi.zero_apply]
+  have : IsVanishingOn u Ω := by
+    apply bar'.mono
+    rwa [Set.subset_compl_comm]
+  exact this _ (TestFunction.tsupport_toSchwartzMapCLM_subset _)
+
 end TemperedDistribution
+
+variable [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
 
 variable [CompleteSpace F]
 
@@ -143,6 +178,14 @@ section NormedSpace
 
 variable [NormedSpace ℂ F]
 variable {Ω : Opens E} {s : ℝ}
+
+open Classical in
+def chooseSobolev (f : SobolevRestrict F Ω s) : Sobolev E F s 2 :=
+  f.exists_memSobolev.choose_spec.2.toSobolev
+
+theorem chooseSobolev_spec {f : SobolevRestrict F Ω s} :
+    f.chooseSobolev.toDistr.restrict Ω = f.toFun :=
+  f.exists_memSobolev.choose_spec.1.symm
 
 instance : Zero (SobolevRestrict F Ω s) where
   zero := {
@@ -185,6 +228,42 @@ instance : SMul ℂ (SobolevRestrict F Ω s) where
         use c • uf
         simp [hf₂.smul c, hf₁] }
 
+instance : AddCommMonoid (SobolevRestrict F Ω s) := sorry
+
+instance : Module ℂ (SobolevRestrict F Ω s) := sorry
+
 end NormedSpace
+
+section InnerProductSpace
+
+variable [InnerProductSpace ℂ F]
+variable {Ω : Opens E} {s : ℝ}
+
+variable (f : SobolevRestrict F Ω s)
+
+def toSobolev (f : SobolevRestrict F Ω s) : Sobolev E F s 2 :=
+    (ContinuousLinearMap.id ℂ (Sobolev E F s 2) - Sobolev.projectionSupportedIn Ω.compl).toFun
+    f.chooseSobolev
+
+theorem toSobolev_spec (f : SobolevRestrict F Ω s) :
+    f.toSobolev.toDistr.restrict Ω = f.toFun := by
+  rw [← chooseSobolev_spec, toSobolev]
+  simp only [ContinuousLinearMap.coe_sub, ContinuousLinearMap.coe_id, AddHom.toFun_eq_coe,
+    LinearMap.coe_toAddHom, LinearMap.sub_apply, LinearMap.id_coe, id_eq,
+    ContinuousLinearMap.coe_coe, Sobolev.toDistr_sub, map_sub, sub_eq_self]
+  apply foo
+  apply Sobolev.dsupport_projectionSupportedIn_subset
+
+/- Todo:
+range is orthogonal complement of H^s_K
+map is injective -/
+
+
+def toSobolevₗ : SobolevRestrict F Ω s →ₗ[ℂ] Sobolev E F s 2 where
+  toFun := toSobolev
+  map_add' := sorry
+  map_smul' := sorry
+
+end InnerProductSpace
 
 end SobolevRestrict
