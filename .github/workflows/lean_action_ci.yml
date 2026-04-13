@@ -27,7 +27,7 @@ jobs:
       - name: Setup pages
         uses: actions/configure-pages@v6
       - name: Upload pages
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v3
         with:
           path: html/html-multi/
 
