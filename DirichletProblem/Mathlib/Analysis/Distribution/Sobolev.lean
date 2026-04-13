@@ -182,6 +182,20 @@ theorem MemSobolev.smul {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] (c : �
   rw [← Lp.toTemperedDistributionCLM_apply]
   simp [hf, Lp.toTemperedDistributionCLM_apply]
 
+/-theorem MemSobolev.nsmul {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] (c : ℕ) {f : 𝓢'(E, F)}
+    (hf : MemSobolev s p f) : MemSobolev s p (c • f) := by
+  obtain ⟨f', hf⟩ := hf
+  use c • f'
+  rw [← Lp.toTemperedDistributionCLM_apply]
+  simp only [ContinuousLinearMap.map_smul_of_tower, hf, Lp.toTemperedDistributionCLM_apply]
+
+theorem MemSobolev.zsmul {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] (c : ℤ) {f : 𝓢'(E, F)}
+    (hf : MemSobolev s p f) : MemSobolev s p (c • f) := by
+  obtain ⟨f', hf⟩ := hf
+  use c • f'
+  rw [← Lp.toTemperedDistributionCLM_apply]
+  simp [hf, Lp.toTemperedDistributionCLM_apply]-/
+
 /-variable {𝕜 : Type*} [NormedField 𝕜] [NormedSpace 𝕜 F] [NormedSpace 𝕜 ℂ]
   [SMulCommClass ℝ 𝕜 F] [SMulCommClass ℂ 𝕜 F] [IsScalarTower 𝕜 ℂ F]
 
@@ -196,6 +210,19 @@ theorem MemSobolev.smul {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] (c : �
   simp only [(Lp.toTemperedDistributionCLM F volume p).map_smul_of_tower , hf,
     Lp.toTemperedDistributionCLM_apply]
 -/
+
+variable {R : Type*} [SMul R 𝓢'(E, F)]
+  {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
+  [SMul R (Lp F p (μ := (volume : Measure E)))]
+  [LinearMap.CompatibleSMul (Lp F p (μ := (volume : Measure E))) 𝓢'(E, F) R ℂ]
+  [LinearMap.CompatibleSMul 𝓢'(E, F) 𝓢'(E, F) R ℂ]
+theorem MemSobolev.smul_of_tower {s : ℝ} (c : R) {f : 𝓢'(E, F)}
+    (hf : MemSobolev s p f) : MemSobolev s p (c • f) := by
+  obtain ⟨f', hf⟩ := hf
+  use c • f'
+  rw [← Lp.toTemperedDistributionCLM_apply]
+  simp [ContinuousLinearMap.map_smul_of_tower, hf]
+
 
 variable (E F) in
 @[simp]
