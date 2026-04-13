@@ -20,8 +20,8 @@ jobs:
         uses: actions/checkout@v5
       - name: Build lean
         uses: leanprover/lean-action@v1
-      - name: Build docs
-        uses: leanprover-community/docgen-action@v1
+      #- name: Build docs
+      #uses: leanprover-community/docgen-action@v1
       - name: Build verso
         run: lake exe generate-docs
       - name: Setup pages
