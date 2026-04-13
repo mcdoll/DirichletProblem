@@ -171,23 +171,6 @@ structure SobolevRestrict [NormedSpace ℂ F] (Ω : Opens E) (s : ℝ) where
   toFun : 𝓓'(Ω, F)
   exists_memSobolev : ∃ u : 𝓢'(E, F), toFun = u.restrict Ω ∧ MemSobolev s 2 u
 
-namespace Sobolev
-
-variable [NormedSpace ℂ F]
-variable {Ω : Opens E} {s : ℝ}
-
-def restrict (f : Sobolev E F s 2) (Ω : Opens E) : SobolevRestrict F Ω s where
-  toFun := f.toDistr.restrict Ω
-  exists_memSobolev := by
-    use f.toDistr
-    simp [f.memSobolev_toDistr]
-
-@[simp]
-theorem toFun_restrict (f : Sobolev E F s 2) (Ω : Opens E) :
-    (f.restrict Ω).toFun = f.toDistr.restrict Ω := rfl
-
-end Sobolev
-
 namespace SobolevRestrict
 
 section NormedSpace
@@ -204,37 +187,15 @@ theorem injective_toFun :
     Function.Injective (SobolevRestrict.toFun (F := F) (Ω := Ω) (s := s)) := by
   apply ext
 
-open Classical in
-def chooseSobolev (f : SobolevRestrict F Ω s) : Sobolev E F s 2 :=
-  f.exists_memSobolev.choose_spec.2.toSobolev
-
-theorem restrict_toDistr_chooseSobolev {f : SobolevRestrict F Ω s} :
-    f.chooseSobolev.toDistr.restrict Ω = f.toFun :=
-  f.exists_memSobolev.choose_spec.1.symm
-
-theorem restrict_chooseSobolev {f : SobolevRestrict F Ω s} :
-    f.chooseSobolev.restrict Ω = f := by
-  ext1
-  apply restrict_toDistr_chooseSobolev
-
-theorem bla' {f g : Sobolev E F s 2} (h : f.restrict Ω = g.restrict Ω) :
-    f - g ∈ SobolevSupportedIn F s Ω.compl := by
-  simp only [Sobolev.mem_SobolevSupportedIn_iff, Sobolev.toDistr_sub, Opens.coe_compl]
-  rw [Set.subset_compl_comm]
-  intro x hx
-  simp only [Set.mem_compl_iff, Distribution.notMem_dsupport_iff]
-  use Ω
-  simp only [Ω.isOpen, hx, and_self, and_true]
-  intro u hu
-  simp_rw [SobolevRestrict.ext_iff, Sobolev.toFun_restrict] at h
-  simp [eq_of_restrict h hu]
-
 instance : Zero (SobolevRestrict F Ω s) where
   zero := {
     toFun := 0
     exists_memSobolev := by
       use 0
       simp }
+
+@[simp]
+theorem toFun_zero : (0 : SobolevRestrict F Ω s).toFun = 0 := rfl
 
 instance : Add (SobolevRestrict F Ω s) where
   add f g :=
@@ -244,6 +205,9 @@ instance : Add (SobolevRestrict F Ω s) where
         obtain ⟨ug, hg₁, hg₂⟩ := g.exists_memSobolev
         use uf + ug
         simp [hf₂.add hg₂, hf₁, hg₁] }
+
+@[simp]
+theorem toFun_add (f g : SobolevRestrict F Ω s) : (f + g).toFun = f.toFun + g.toFun := rfl
 
 instance : Sub (SobolevRestrict F Ω s) where
   sub f g :=
@@ -286,6 +250,9 @@ instance : SMul ℂ (SobolevRestrict F Ω s) where
         use c • uf
         simp [hf₂.smul c, hf₁] }
 
+@[simp]
+theorem toFun_smul (c : ℂ) (f : SobolevRestrict F Ω s) : (c • f).toFun = c • f.toFun := rfl
+
 instance instAddCommGroup : AddCommGroup (SobolevRestrict F Ω s) :=
   (injective_toFun F Ω s).addCommGroup _ rfl (fun _ _ => rfl) (fun _ => rfl) (fun _ _ => rfl)
     (fun _ _ => rfl) fun _ _ => rfl
@@ -302,6 +269,73 @@ theorem coeHom_injective : Function.Injective (coeHom F Ω s) := by
 
 instance instModule : Module ℂ (SobolevRestrict F Ω s) :=
   coeHom_injective.module ℂ (coeHom F Ω s) fun _ _ => rfl
+
+end NormedSpace
+
+end SobolevRestrict
+
+namespace Sobolev
+
+variable [NormedSpace ℂ F]
+variable {Ω : Opens E} {s : ℝ}
+
+/-def restrict (f : Sobolev E F s 2) (Ω : Opens E) : SobolevRestrict F Ω s where
+  toFun := f.toDistr.restrict Ω
+  exists_memSobolev := by
+    use f.toDistr
+    simp [f.memSobolev_toDistr]-/
+
+def restrict (Ω : Opens E) : Sobolev E F s 2 →ₗ[ℂ] SobolevRestrict F Ω s where
+  toFun f :=
+    { toFun := f.toDistr.restrict Ω,
+      exists_memSobolev := by
+        use f.toDistr
+        simp [f.memSobolev_toDistr] }
+  map_add' := by intros; ext1; simp
+  map_smul' := by intros; ext1; simp
+
+@[simp]
+theorem toFun_restrict (f : Sobolev E F s 2) (Ω : Opens E) :
+    (f.restrict Ω).toFun = f.toDistr.restrict Ω := rfl
+
+theorem restrict_eq_zero_of_dsupport {f : Sobolev E F s 2}
+    (hf : Distribution.dsupport f.toDistr ⊆ Ωᶜ) : f.restrict Ω = 0 := by
+  ext1
+  simpa using foo hf
+
+end Sobolev
+
+namespace SobolevRestrict
+
+section NormedSpace
+
+variable [NormedSpace ℂ F]
+variable {Ω : Opens E} {s : ℝ}
+
+open Classical in
+def chooseSobolev (f : SobolevRestrict F Ω s) : Sobolev E F s 2 :=
+  f.exists_memSobolev.choose_spec.2.toSobolev
+
+theorem restrict_toDistr_chooseSobolev {f : SobolevRestrict F Ω s} :
+    f.chooseSobolev.toDistr.restrict Ω = f.toFun :=
+  f.exists_memSobolev.choose_spec.1.symm
+
+theorem restrict_chooseSobolev {f : SobolevRestrict F Ω s} :
+    f.chooseSobolev.restrict Ω = f := by
+  ext1
+  apply restrict_toDistr_chooseSobolev
+
+theorem bla' {f g : Sobolev E F s 2} (h : f.restrict Ω = g.restrict Ω) :
+    f - g ∈ SobolevSupportedIn F s Ω.compl := by
+  simp only [Sobolev.mem_SobolevSupportedIn_iff, Sobolev.toDistr_sub, Opens.coe_compl]
+  rw [Set.subset_compl_comm]
+  intro x hx
+  simp only [Set.mem_compl_iff, Distribution.notMem_dsupport_iff]
+  use Ω
+  simp only [Ω.isOpen, hx, and_self, and_true]
+  intro u hu
+  simp_rw [SobolevRestrict.ext_iff, Sobolev.toFun_restrict] at h
+  simp [eq_of_restrict h hu]
 
 end NormedSpace
 
@@ -388,6 +422,18 @@ def _root_.Sobolev.supportedIn_toSobolevRestrict :
   right_inv f := by
     simpa using restrict_toSobolev f
 
+theorem toSobolev_add (f g : SobolevRestrict F Ω s) :
+    (f + g).toSobolev = f.toSobolev + g.toSobolev := by
+  have := map_add (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm f g
+  rw [Subtype.ext_iff] at this
+  exact this
+
+theorem toSobolev_smul (c : ℂ) (f : SobolevRestrict F Ω s) :
+    (c • f).toSobolev = c • f.toSobolev := by
+  have := map_smul (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm c f
+  rw [Subtype.ext_iff] at this
+  exact this
+
 @[simp]
 theorem _root_.Sobolev.supportedIn_toSobolevRestrict_apply
     (f : (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule) :
@@ -402,23 +448,39 @@ variable (F Ω s) in
 def toSobolevₗ : SobolevRestrict F Ω s →ₗ[ℂ] Sobolev E F s 2 :=
   Submodule.subtype _ ∘ₗ (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm.toLinearMap
 
+@[simp]
+theorem toSobolevₗ_apply (f : SobolevRestrict F Ω s) : f.toSobolevₗ F Ω s = f.toSobolev := rfl
+
 variable (F Ω s) in
 theorem injective_toSobolevₗ : Function.Injective (toSobolevₗ F Ω s) := by
   simpa [toSobolevₗ] using
     EmbeddingLike.injective (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm
 
-/-instance instNormedAddCommGroup :
-    NormedAddCommGroup (SobolevRestrict F Ω s) :=
-  NormedAddCommGroup.induced (SobolevRestrict F Ω s) (Sobolev E F s 2) (toSobolevₗ F Ω s)
-    (injective_toSobolevₗ F Ω s)-/
-
-instance instNormedAddCommGroup' :
+instance instNormedAddCommGroup :
     NormedAddCommGroup (SobolevRestrict F Ω s) :=
   NormedAddCommGroup.induced (SobolevRestrict F Ω s) ((SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule)
     (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm.toLinearMap
     (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm.injective
 
--- inner product space
+theorem foo (y : SobolevRestrict F Ω s) :
+    ‖(Sobolev.supportedIn_toSobolevRestrict F Ω s).symm y‖ = ‖y‖ := rfl
+
+theorem norm_toSobolev (y : SobolevRestrict F Ω s) :
+    ‖y.toSobolev‖ = ‖y‖ := rfl
+
+instance instNormedSpace :
+    NormedSpace ℂ (SobolevRestrict F Ω s) where
+  norm_smul_le c f := by
+    simp_rw [← norm_toSobolev, ← norm_smul, toSobolev_smul]
+    rfl
+
+instance instInnerProductSpace (s : ℝ) :
+    InnerProductSpace ℂ (SobolevRestrict F Ω s) where
+  inner f g := inner ℂ f.toSobolev g.toSobolev
+  norm_sq_eq_re_inner f := by simp; norm_cast
+  conj_inner_symm f g := by simp
+  add_left f g h := by rw [toSobolev_add, inner_add_left]
+  smul_left f g c := by rw [toSobolev_smul, inner_smul_left]
 
 variable (F Ω s) in
 def _root_.Sobolev.toSobolevRestrict :
@@ -427,7 +489,7 @@ def _root_.Sobolev.toSobolevRestrict :
   norm_map' x := calc
     _ = ‖(Sobolev.supportedIn_toSobolevRestrict F Ω s).symm <|
         (Sobolev.supportedIn_toSobolevRestrict F Ω s) x‖ := by
-      rfl
+      rw [foo]
     _ = ‖x‖ := by
       congr
       exact (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm_apply_apply x
@@ -443,23 +505,51 @@ theorem _root_.Sobolev.toSobolevRestrict_symm_apply
     (Sobolev.toSobolevRestrict F Ω s).symm f = ⟨f.toSobolev, f.toSobolev_mem⟩ := rfl
 
 variable (F Ω s) in
-def _root_.Sobolev.toSobolevRestrict' : Sobolev E F s 2 →L[ℂ] SobolevRestrict F Ω s :=
+def _root_.Sobolev.restrictCLM : Sobolev E F s 2 →L[ℂ] SobolevRestrict F Ω s :=
   (Sobolev.toSobolevRestrict F Ω s).toContinuousLinearEquiv.toContinuousLinearMap ∘L
     (SobolevSupportedIn F s Ω.compl)ᗮ.orthogonalProjection
 
-theorem _root_.ClosedSubmodule.orthogonalProjection_orthogonal
-    (K : ClosedSubmodule ℂ (Sobolev E F s 2))
-    (u : Sobolev E F s 2) :
-    Kᗮ.toSubmodule.orthogonalProjection u =
-      ⟨u - K.starProjection u, sorry⟩ := by sorry
-
-theorem root_.Sobolev.toSobolevRestrict'_apply (f : Sobolev E F s 2) :
-    f.toSobolevRestrict' F Ω s = f.restrict Ω := by
-  apply (Sobolev.toSobolevRestrict F Ω s).symm.injective
-  simp only [Sobolev.toSobolevRestrict_symm_apply]
+-- the next two proofs are really bad - there must be some weird defeq abuse going on
+theorem root_.Sobolev.restrictCLM_apply_of_mem {f : Sobolev E F s 2}
+    (hf : f ∈ SobolevSupportedIn F s Ω.compl) : f.restrictCLM F Ω s = 0 := by
+  have := Submodule.orthogonalProjection_eq_zero_iff
+    (K := (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule) (v := f)
+  simp only [ClosedSubmodule.toSubmodule_orthogonal_eq, Submodule.orthogonal_orthogonal] at this
+  have := this.mpr hf
+  rw [Sobolev.restrictCLM]
+  simp only [ClosedSubmodule.toSubmodule_orthogonal_eq, ContinuousLinearMap.coe_comp',
+    Function.comp_apply]
   ext1
-  simp [Sobolev.toSobolevRestrict']
-  sorry
+  erw [this]
+  simp
+  rfl
+
+theorem root_.Sobolev.restrictCLM_apply_of_mem_orthogonal {f : Sobolev E F s 2}
+    (hf : f ∈ (SobolevSupportedIn F s Ω.compl)ᗮ) : f.restrictCLM F Ω s = f.restrict Ω := by
+  --apply toSobolev_injective
+  have := Sobolev.supportedIn_toSobolevRestrict_apply ⟨f, hf⟩
+  simp at this
+  rw [Sobolev.restrictCLM]
+  simp only [ClosedSubmodule.toSubmodule_orthogonal_eq, ContinuousLinearMap.coe_comp',
+    Function.comp_apply]
+  have := Submodule.orthogonalProjection_mem_subspace_eq_self ⟨f, hf⟩
+  simp only [ClosedSubmodule.toSubmodule_orthogonal_eq] at this
+  erw [this]
+  rfl
+
+@[simp]
+theorem root_.Sobolev.restrictCLM_apply (f : Sobolev E F s 2) :
+    f.restrictCLM F Ω s = f.restrict Ω := by
+  obtain ⟨f₁, hf₁, f₂, hf₂, h⟩ :=
+    Submodule.exists_add_mem_mem_orthogonal f (K := (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule)
+  rw [h]
+  simp only [ClosedSubmodule.toSubmodule_orthogonal_eq] at hf₁ hf₂
+  simp only [Submodule.orthogonal_orthogonal] at hf₂
+  simp only [map_add, Sobolev.restrictCLM_apply_of_mem_orthogonal hf₁,
+    Sobolev.restrictCLM_apply_of_mem hf₂, add_zero, left_eq_add]
+  simp only [ClosedSubmodule.mem_toSubmodule_iff, Sobolev.mem_SobolevSupportedIn_iff,
+    Opens.coe_compl] at hf₂
+  exact Sobolev.restrict_eq_zero_of_dsupport hf₂
 
 end InnerProductSpace
 
