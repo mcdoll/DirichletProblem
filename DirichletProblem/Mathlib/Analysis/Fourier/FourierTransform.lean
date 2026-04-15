@@ -46,7 +46,7 @@ end CompContinuousCLM
 
 namespace Real
 
-/-- The Fourier transform from `L1` functions to bounded continuous functions. -/
+/-- The inverse Fourier transform from `L1` functions to bounded continuous functions. -/
 def Lp.fourierTransformInv (f : Lp (α := V) E 1) : V →ᵇ E :=
   (Lp.fourierTransform f).compContinuous (-ContinuousMap.id V)
 

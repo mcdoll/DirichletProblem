@@ -128,6 +128,33 @@ theorem toTemperedDistribution_apply {f : E → F} {k : ℕ} (hf : LocallyIntegr
     (hf' : f =O[Filter.cocompact E] (‖·‖ ^ k)) (g : 𝓢(E, ℂ)) :
     hf.toTemperedDistribution hf' g = ∫ x, g x • f x ∂μ := rfl
 
+variable [FiniteDimensional ℝ E] [CompleteSpace F]
+
+theorem toTemperedDistribution_eq_zero_iff {f : E → F} {k : ℕ} (hf : LocallyIntegrable f μ)
+    (hf' : f =O[Filter.cocompact E] (‖·‖ ^ k)) :
+    hf.toTemperedDistribution hf' = 0 ↔ f =ᶠ[ae μ] 0 := by
+  constructor
+  · intro hf_zero
+    apply ae_eq_zero_of_integral_contDiff_smul_eq_zero hf
+    intro g g_smooth g_cpt
+    have hg₁ : HasCompactSupport (Complex.ofRealCLM ∘ g) := g_cpt.comp_left rfl
+    have hg₂ : ContDiff ℝ ∞ (Complex.ofRealCLM ∘ g) := by fun_prop
+    calc
+      _ = hf.toTemperedDistribution hf' (hg₁.toSchwartzMap hg₂) := by simp
+      _ = _ := by simp [hf_zero]
+  intro hf_zero
+  ext g
+  refine integral_eq_zero_of_ae ?_
+  filter_upwards [hf_zero] with x hf_zero
+  simp [hf_zero]
+
+variable [μ.IsOpenPosMeasure]
+
+theorem toTemperedDistribution_eq_zero_iff' {f : E → F} {k : ℕ} (hf : LocallyIntegrable f μ)
+    (hf' : f =O[Filter.cocompact E] (‖·‖ ^ k)) (h_cont : Continuous f) :
+    hf.toTemperedDistribution hf' = 0 ↔ f = 0 := by
+  rw [toTemperedDistribution_eq_zero_iff, h_cont.ae_eq_iff_eq μ (by fun_prop)]
+
 end MeasureTheory.LocallyIntegrable
 
 namespace BoundedContinuousFunction
@@ -153,21 +180,27 @@ theorem integrable_schwartzMap_smul [hμ : μ.HasTemperateGrowth] [IsLocallyFini
 
 set_option backward.privateInPublic true in
 def toTemperedDistribution (f : E →ᵇ F) : 𝓢'(E, F) :=
-  LocallyIntegrable.toTemperedDistribution (μ := μ) (f := f) (k := 0) ?_ ?_
+  (map_continuous f).locallyIntegrable.toTemperedDistribution (μ := μ) (f := f) (k := 0) ?_
 where finally
-  · exact (map_continuous f).locallyIntegrable
-  · rw [isBigO_cocompact_iff]
-    use ‖f‖ + 1
-    refine ⟨by positivity, ?_⟩
-    use ∅, by simp
-    intro x _
-    grw [BoundedContinuousFunction.norm_coe_le_norm f x]
-    simp
+  rw [isBigO_cocompact_iff]
+  use ‖f‖ + 1
+  refine ⟨by positivity, ?_⟩
+  use ∅, by simp
+  intro x _
+  grw [BoundedContinuousFunction.norm_coe_le_norm f x]
+  simp
 
 set_option backward.privateInPublic true in
 @[simp]
 theorem toTemperedDistribution_apply (f : E →ᵇ F) (g : 𝓢(E, ℂ)) :
     f.toTemperedDistribution μ g = ∫ x, g x • f x ∂μ := rfl
+
+set_option backward.privateInPublic true in
+theorem toTemperedDistribution_eq_zero_iff [FiniteDimensional ℝ E] [CompleteSpace F]
+    [μ.IsOpenPosMeasure] (f : E →ᵇ F) :
+    f.toTemperedDistribution μ = 0 ↔ f = 0 := by
+  rw [toTemperedDistribution, LocallyIntegrable.toTemperedDistribution_eq_zero_iff' _ _
+    f.continuous, ← coe_zero, DFunLike.coe_fn_eq]
 
 set_option backward.privateInPublic true in
 @[simp]
@@ -199,6 +232,18 @@ def toTemperedDistributionCLM : (E →ᵇ F) →L[ℂ] 𝓢'(E, F) where
     apply integral_congr_ae
     filter_upwards [g.coeFn_toLp 1 μ, f.memLp_top.coeFn_toLp] with x hg hf
     simp [hg, hf]
+
+set_option backward.privateInPublic true in
+@[simp]
+theorem toTemperedDistributionCLM_apply (f : E →ᵇ F) :
+    f.toTemperedDistributionCLM E F μ = f.toTemperedDistribution μ := rfl
+
+set_option backward.privateInPublic true in
+theorem toTemperedDistributionCLM_ker_eq_bot [FiniteDimensional ℝ E] [μ.IsOpenPosMeasure] :
+    (toTemperedDistributionCLM E F μ).ker = ⊥ := by
+  rw [LinearMap.ker_eq_bot', ContinuousLinearMap.coe_coe]
+  intro f hf
+  rwa [f.toTemperedDistributionCLM_apply μ, f.toTemperedDistribution_eq_zero_iff μ] at hf
 
 end BoundedContinuousFunction
 

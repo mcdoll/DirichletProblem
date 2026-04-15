@@ -24,7 +24,7 @@ open scoped SchwartzMap ZeroAtInfty FourierTransform
 by a `C₀(E, F)` function. -/
 theorem MemSobolev.zeroAtInfty {s : ℝ} (hs : Module.finrank ℝ E < 2 * s) {f : 𝓢'(E, F)}
     (hf : MemSobolev s 2 f) :
-    ∃ (v : C₀(E, F)), f  = v.toBCF.toTemperedDistribution := by
+    ∃ (v : C₀(E, F)), f = v.toBCF.toTemperedDistribution := by
   obtain ⟨g, hg⟩ := hf.fourier_memL1 hs
   use Real.Lp.fourierTransformInvZeroAtInftyCLM E F g
   simp [← MeasureTheory.Lp.fourierInv_toTemperedDistributionCLM_eq, ← hg]
@@ -44,7 +44,7 @@ section normed
 variable [NormedSpace ℂ F]
 
 variable (E F) in
-/-- The Sobolev space of order `s`.
+/-- The Sobolev space of order `s : ℝ`.
 
 It is defined as the set of all tempered distributions `f` such that
 `𝓕⁻ (1 + ‖x‖ ^ 2) ^ (s / 2) 𝓕 f` can be represented by a `Lp` function `f'`. Both `f` and `f'` are
@@ -56,9 +56,9 @@ structure Sobolev (s : ℝ) (p : ℝ≥0∞) [hp : Fact (1 ≤ p)] where
 
 namespace Sobolev
 
-variable {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
+variable {s s' : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
 
-theorem ext' {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] {f g : Sobolev E F s p}
+theorem ext' {f g : Sobolev E F s p}
     (h₁ : f.toDistr = g.toDistr) (h₂ : f.sobFn = g.sobFn) : f = g := by
   cases f; cases g; congr
 
@@ -71,8 +71,7 @@ theorem besselPotential_neg_sobFn_eq {f : Sobolev E F s p} :
   simp [← f.bessel_toDistr_eq_sobFn]
 
 @[ext]
-theorem ext {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] {f g : Sobolev E F s p}
-    (h₁ : f.toDistr = g.toDistr) : f = g := by
+theorem ext {f g : Sobolev E F s p} (h₁ : f.toDistr = g.toDistr) : f = g := by
   apply ext' h₁
   apply_fun MeasureTheory.Lp.toTemperedDistribution; swap
   · apply LinearMap.ker_eq_bot.mp MeasureTheory.Lp.ker_toTemperedDistributionCLM_eq_bot
@@ -82,13 +81,21 @@ theorem ext {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] {f g : Sobolev E F 
     _ = g.sobFn := g.bessel_toDistr_eq_sobFn
 
 /-- Transfer a Sobolev function in `H^{s,p}` to `H^{s', p}` given that `s = s'`. -/
-def copy {p : ℝ≥0∞} [hp : Fact (1 ≤ p)] {s s' : ℝ} (hs : s = s') (f : Sobolev E F s p) :
+def copy (hs : s = s') (f : Sobolev E F s p) :
     Sobolev E F s' p where
   toDistr := f.toDistr
   sobFn := f.sobFn
   bessel_toDistr_eq_sobFn := by
     rw [← hs]
     exact f.bessel_toDistr_eq_sobFn
+
+@[simp]
+theorem toDistr_copy (f : Sobolev E F s p) (hs : s = s') :
+  (f.copy hs).toDistr = f.toDistr := rfl
+
+@[simp]
+theorem sobFn_copy (f : Sobolev E F s p) (hs : s = s') :
+  (f.copy hs).sobFn = f.sobFn := rfl
 
 variable (E F s p) in
 theorem injective_sobFn :
@@ -111,6 +118,9 @@ instance instZero : Zero (Sobolev E F s p) where
 @[simp]
 theorem toDistr_zero : (0 : Sobolev E F s p).toDistr = 0 := rfl
 
+@[simp]
+theorem sobFn_zero : (0 : Sobolev E F s p).sobFn = 0 := rfl
+
 instance instAdd : Add (Sobolev E F s p) where
   add f g := {
     toDistr := f.toDistr + g.toDistr
@@ -121,6 +131,9 @@ instance instAdd : Add (Sobolev E F s p) where
 
 @[simp]
 theorem toDistr_add (f g : Sobolev E F s p) : (f + g).toDistr = f.toDistr + g.toDistr := rfl
+
+@[simp]
+theorem sobFn_add (f g : Sobolev E F s p) : (f + g).sobFn = f.sobFn + g.sobFn := rfl
 
 instance instSub : Sub (Sobolev E F s p) where
   sub f g := {
@@ -133,6 +146,9 @@ instance instSub : Sub (Sobolev E F s p) where
 @[simp]
 theorem toDistr_sub (f g : Sobolev E F s p) : (f - g).toDistr = f.toDistr - g.toDistr := rfl
 
+@[simp]
+theorem sobFn_sub (f g : Sobolev E F s p) : (f - g).sobFn = f.sobFn - g.sobFn := rfl
+
 instance instNeg : Neg (Sobolev E F s p) where
   neg f := {
     toDistr := -f.toDistr
@@ -141,33 +157,29 @@ instance instNeg : Neg (Sobolev E F s p) where
       change _ = Lp.toTemperedDistributionCLM F volume p (- _)
       simp [map_neg, f.bessel_toDistr_eq_sobFn] }
 
-instance instNSMul : SMul ℕ (Sobolev E F s p) where
-  smul c f := {
-    toDistr := c • f.toDistr
-    sobFn := c • f.sobFn
-    bessel_toDistr_eq_sobFn := by
-      change _ = Lp.toTemperedDistributionCLM F volume p _
-      simp [f.bessel_toDistr_eq_sobFn] }
-
-instance instZSMul : SMul ℤ (Sobolev E F s p) where
-  smul c f := {
-    toDistr := c • f.toDistr
-    sobFn := c • f.sobFn
-    bessel_toDistr_eq_sobFn := by
-      change _ = Lp.toTemperedDistributionCLM F volume p _
-      simp [f.bessel_toDistr_eq_sobFn] }
-
-/- Generalize this-/
-instance instSMul : SMul ℂ (Sobolev E F s p) where
-  smul c f := {
-    toDistr := c • f.toDistr
-    sobFn := c • f.sobFn
-    bessel_toDistr_eq_sobFn := by
-      change _ = Lp.toTemperedDistributionCLM F volume p _
-      simp [map_smul, f.bessel_toDistr_eq_sobFn] }
+@[simp]
+theorem toDistr_neg (f : Sobolev E F s p) : (-f).toDistr = -f.toDistr := rfl
 
 @[simp]
-theorem toDistr_smul (c : ℂ) (f : Sobolev E F s p) : (c • f).toDistr = c • f.toDistr := rfl
+theorem sobFn_neg (f : Sobolev E F s p) : (-f).sobFn = -f.sobFn := rfl
+
+variable {R : Type*} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
+  [SMul R ℂ] [SMul R 𝓢'(E, F)] [SMul R (Lp F p (μ := (volume : Measure E)))]
+  [IsScalarTower R ℂ 𝓢'(E, F)] [IsScalarTower R ℂ (Lp F p (μ := (volume : Measure E)))]
+
+instance instSMul : SMul R (Sobolev E F s p) where
+  smul c f := {
+    toDistr := c • f.toDistr
+    sobFn := c • f.sobFn
+    bessel_toDistr_eq_sobFn := by
+      change _ = Lp.toTemperedDistributionCLM F volume p _
+      simp [f.bessel_toDistr_eq_sobFn] }
+
+@[simp]
+theorem toDistr_smul (c : R) (f : Sobolev E F s p) : (c • f).toDistr = c • f.toDistr := rfl
+
+@[simp]
+theorem sobFn_smul (c : R) (f : Sobolev E F s p) : (c • f).sobFn = c • f.sobFn := rfl
 
 instance instAddCommGroup : AddCommGroup (Sobolev E F s p) :=
   (injective_sobFn E F s p).addCommGroup _ rfl (fun _ _ => rfl) (fun _ => rfl) (fun _ _ => rfl)
@@ -214,12 +226,6 @@ theorem ofLp_sobFn (f : Sobolev E F s p) :
 @[simp]
 theorem toLpₗ_apply (f : Sobolev E F s p) :
     toLpₗ E F s p f = sobFn f := rfl
-
-theorem sobFn_add (f g : Sobolev E F s p) :
-    sobFn (f + g) = sobFn f + sobFn g := rfl
-
-theorem sobFn_smul (c : ℂ) (f : Sobolev E F s p) :
-    sobFn (c • f) = c • sobFn f := rfl
 
 instance instNormedAddCommGroup :
     NormedAddCommGroup (Sobolev E F s p) :=
@@ -282,8 +288,8 @@ instance instInnerProductSpace (s : ℝ) :
   inner f g := inner ℂ f.sobFn g.sobFn
   norm_sq_eq_re_inner f := by simp; norm_cast
   conj_inner_symm f g := by simp
-  add_left f g h := by rw [sobFn_add, inner_add_left]
-  smul_left f g c := by rw [sobFn_smul, inner_smul_left]
+  add_left f g h := by simp [inner_add_left]
+  smul_left f g c := by simp [inner_smul_left]
 
 open Laplacian
 
