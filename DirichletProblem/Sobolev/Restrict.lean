@@ -137,13 +137,9 @@ theorem restrict_apply (u : 𝓢'(E, F)) (f : TestFunction Ω ℂ ⊤) :
 
 open Distribution
 
-theorem foo {u : 𝓢'(E, F)} (hu : dsupport u ⊆ Ωᶜ) : u.restrict Ω = 0 := by
+theorem restrict_eq_zero {u : 𝓢'(E, F)} (hu : dsupport u ⊆ Ωᶜ) : u.restrict Ω = 0 := by
   ext f
-  simp only [u.restrict_apply, UniformConvergenceCLM.coe_zero, Pi.zero_apply]
-  have : IsVanishingOn u Ω := by
-    apply bar'.mono
-    rwa [Set.subset_compl_comm]
-  exact this _ (TestFunction.tsupport_toSchwartzMapCLM_subset _)
+  exact isVanishingOn_dsupport_subset_compl hu _ (TestFunction.tsupport_toSchwartzMapCLM_subset _)
 
 theorem eq_of_restrict {f g : 𝓢'(E, F)} {u : 𝓢(E, ℂ)} (h₁ : f.restrict Ω = g.restrict Ω)
     (h₂ : tsupport u ⊆ Ω) : f u = g u := by
@@ -271,12 +267,6 @@ namespace Sobolev
 variable [NormedSpace ℂ F]
 variable {Ω : Opens E} {s : ℝ}
 
-/-def restrict (f : Sobolev E F s 2) (Ω : Opens E) : SobolevRestrict F Ω s where
-  toFun := f.toDistr.restrict Ω
-  exists_memSobolev := by
-    use f.toDistr
-    simp [f.memSobolev_toDistr]-/
-
 def restrict (Ω : Opens E) : Sobolev E F s 2 →ₗ[ℂ] SobolevRestrict F Ω s where
   toFun f :=
     { toFun := f.toDistr.restrict Ω,
@@ -293,7 +283,7 @@ theorem toFun_restrict (f : Sobolev E F s 2) (Ω : Opens E) :
 theorem restrict_eq_zero_of_dsupport {f : Sobolev E F s 2}
     (hf : Distribution.dsupport f.toDistr ⊆ Ωᶜ) : f.restrict Ω = 0 := by
   ext1
-  simpa using foo hf
+  simpa using restrict_eq_zero hf
 
 end Sobolev
 
@@ -343,7 +333,7 @@ theorem toSobolev_spec (f : SobolevRestrict F Ω s) :
     f.toSobolev.toDistr.restrict Ω = f.toFun := by
   rw [← restrict_toDistr_chooseSobolev, toSobolev]
   simp only [Sobolev.toDistr_sub, map_sub, sub_eq_self]
-  apply foo
+  apply restrict_eq_zero
   apply Sobolev.dsupport_projectionSupportedIn_subset
 
 theorem restrict_toSobolev (f : SobolevRestrict F Ω s) :
@@ -376,6 +366,7 @@ theorem toSobolev_injective : Function.Injective (toSobolev (F := F) (Ω := Ω) 
   ext1
   simp_rw [← toSobolev_spec, h]
 
+-- unclear if needed
 theorem dsupport_toSobolev (f : SobolevRestrict F Ω s) :
     Distribution.dsupport f.toSobolev.toDistr ⊆ Ω := by
   sorry

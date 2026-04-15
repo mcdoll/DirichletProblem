@@ -71,4 +71,9 @@ theorem bar' {u : 𝓢'(E, F)} : IsVanishingOn u (dsupport u)ᶜ := by
   -- your proof is in another castle (PR)
   sorry
 
+theorem isVanishingOn_dsupport_subset_compl {Ω : Set E} {u : 𝓢'(E, F)} (hu : dsupport u ⊆ Ωᶜ) :
+    IsVanishingOn u Ω := by
+  apply bar'.mono
+  rwa [Set.subset_compl_comm]
+
 end TemperedDistribution
