@@ -75,8 +75,8 @@ theorem Lp.fourierTransformInv_toLp {f : V → E} (hf : MemLp f 1) :
   exact (Real.fourierInv_congr_ae hf.coeFn_toLp) x
 
 variable (V E) in
-/-- The Fourier transform from `L1` functions to bounded continuous functions as a continuous linear
-map. -/
+/-- The inverse Fourier transform from `L1` functions to bounded continuous functions as a
+continuous linear map. -/
 def Lp.fourierTransformInvCLM : Lp (α := V) E 1 →L[ℂ] V →ᵇ E :=
   BoundedContinuousFunction.compContinuousCLM ℂ (-ContinuousMap.id V) ∘L Lp.fourierTransformCLM V E
 

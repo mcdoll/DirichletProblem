@@ -266,18 +266,17 @@ theorem MemSobolev.fourier_memL1 {s : ℝ} (hs : Module.finrank ℝ E < 2 * s) {
       ring
   have : MemLp (fun x : E ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (-s / 2) : ℝ)) 2 := this.ofReal
   use this.toLp • u
-  rw [MeasureTheory.Lp.toTemperedDistribution_smul_eq]
-  · rw [← hu, smulLeftCLM_smulLeftCLM_apply (by fun_prop) (by fun_prop)]
-    convert (smulLeftCLM_const 1 (𝓕 f)).symm using 1
-    · simp
-    · congr
-      ext x
-      rw [Pi.mul_apply]
-      norm_cast
-      rw [← Real.rpow_add (by positivity)]
-      ring_nf
-      simp
-  · fun_prop
+  rw [MeasureTheory.Lp.toTemperedDistribution_smul_eq (by fun_prop)]
+  rw [← hu, smulLeftCLM_smulLeftCLM_apply (by fun_prop) (by fun_prop)]
+  convert (smulLeftCLM_const 1 (𝓕 f)).symm using 1
+  · simp
+  · congr
+    ext x
+    rw [Pi.mul_apply]
+    norm_cast
+    rw [← Real.rpow_add (by positivity)]
+    ring_nf
+    simp
 
 open scoped BoundedContinuousFunction
 

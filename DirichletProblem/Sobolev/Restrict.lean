@@ -137,10 +137,6 @@ theorem restrict_apply (u : 𝓢'(E, F)) (f : TestFunction Ω ℂ ⊤) :
 
 open Distribution
 
-theorem bar' {u : 𝓢'(E, F)} : IsVanishingOn u (dsupport u)ᶜ := by
-  -- your proof is in another castle (PR)
-  sorry
-
 theorem foo {u : 𝓢'(E, F)} (hu : dsupport u ⊆ Ωᶜ) : u.restrict Ω = 0 := by
   ext f
   simp only [u.restrict_apply, UniformConvergenceCLM.coe_zero, Pi.zero_apply]
@@ -218,6 +214,9 @@ instance : Sub (SobolevRestrict F Ω s) where
         use uf - ug
         simp [hf₂.sub hg₂, hf₁, hg₁] }
 
+@[simp]
+theorem toFun_sub (f g : SobolevRestrict F Ω s) : (f - g).toFun = f.toFun - g.toFun := rfl
+
 instance : Neg (SobolevRestrict F Ω s) where
   neg f :=
     { toFun := -f.toFun,
@@ -226,23 +225,16 @@ instance : Neg (SobolevRestrict F Ω s) where
         use -uf
         simp [hf₂.neg, hf₁] }
 
-instance : SMul ℕ (SobolevRestrict F Ω s) where
-  smul c f :=
-    { toFun := c • f.toFun,
-      exists_memSobolev := by
-        obtain ⟨uf, hf₁, hf₂⟩ := f.exists_memSobolev
-        use c • uf
-        simp [hf₂.smul_of_tower c, hf₁] }
+@[simp]
+theorem toFun_neg (f : SobolevRestrict F Ω s) : (-f).toFun = -f.toFun := rfl
 
-instance : SMul ℤ (SobolevRestrict F Ω s) where
-  smul c f :=
-    { toFun := c • f.toFun,
-      exists_memSobolev := by
-        obtain ⟨uf, hf₁, hf₂⟩ := f.exists_memSobolev
-        use c • uf
-        simp [hf₂.smul_of_tower c, hf₁] }
+variable {R : Type*}
+  [SMul R ℂ] [SMul R 𝓢'(E, F)] [SMul R (Lp F 2 (μ := (volume : Measure E)))]
+  [SMul R 𝓓'(Ω, F)]
+  [IsScalarTower R ℂ 𝓢'(E, F)] [IsScalarTower R ℂ (Lp F 2 (μ := (volume : Measure E)))]
+  [IsScalarTower R ℂ 𝓓'(Ω, F)]
 
-instance : SMul ℂ (SobolevRestrict F Ω s) where
+instance : SMul R (SobolevRestrict F Ω s) where
   smul c f :=
     { toFun := c • f.toFun,
       exists_memSobolev := by
@@ -251,7 +243,7 @@ instance : SMul ℂ (SobolevRestrict F Ω s) where
         simp [hf₂.smul c, hf₁] }
 
 @[simp]
-theorem toFun_smul (c : ℂ) (f : SobolevRestrict F Ω s) : (c • f).toFun = c • f.toFun := rfl
+theorem toFun_smul (c : R) (f : SobolevRestrict F Ω s) : (c • f).toFun = c • f.toFun := rfl
 
 instance instAddCommGroup : AddCommGroup (SobolevRestrict F Ω s) :=
   (injective_toFun F Ω s).addCommGroup _ rfl (fun _ _ => rfl) (fun _ => rfl) (fun _ _ => rfl)

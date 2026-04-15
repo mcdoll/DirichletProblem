@@ -1,7 +1,7 @@
 module
 
 public import DirichletProblem.Sobolev.Basic
-public import Mathlib.Analysis.Distribution.Support
+public import DirichletProblem.Mathlib.Analysis.Distribution.Support
 
 @[expose] public noncomputable section
 
@@ -18,24 +18,38 @@ variable [NormedSpace ℂ F]
 
 variable {s : ℝ}
 
+open FourierTransform
+
 variable (F s) in
 def SobolevSupportedIn (K : Closeds E) : ClosedSubmodule ℂ (Sobolev E F s 2) where
   carrier := { f | dsupport f.toDistr ⊆ K }
   add_mem' {f g} hf hg := by
     simp only [Set.mem_setOf_eq, Sobolev.toDistr_add]
-    sorry
-  zero_mem' := by
-    simp
-    sorry
+    grw [TemperedDistribution.dsupport_add]
+    grind
+  zero_mem' := by simp
   smul_mem' c {f} hf := by
-    simp
-    sorry
+    simp only [Set.mem_setOf_eq, Sobolev.toDistr_smul]
+    grw [TemperedDistribution.dsupport_smul]
+    exact hf
   isClosed' := by
     refine IsSeqClosed.isClosed ?_
     intro a f ha haf
     simp only [Set.mem_setOf_eq] at ha ⊢
     intro x hx
-    sorry
+    rw [mem_dsupport_iff_forall_exists_ne] at hx
+    by_contra h
+    obtain ⟨u, hu₁, hu₂⟩ := hx K.compl h K.compl.isOpen
+    apply hu₂
+    have ha' : ∀ n, (a n).toDistr u = 0 := by
+      intro n
+      specialize ha n
+      apply TemperedDistribution.bar'
+      grw [hu₁]
+      rwa [← Set.compl_subset_compl] at ha
+    apply tendsto_nhds_unique _ (tendsto_atTop_of_eventually_const (i₀ := 0) (fun x _ ↦ ha' x))
+    simp only [Sobolev.toDistr_apply]
+    exact ((ContinuousLinearMap.cont _).comp (by fun_prop) |>.tendsto f).comp haf
 
 @[simp]
 theorem Sobolev.mem_SobolevSupportedIn_iff {K : Closeds E} (u : Sobolev E F s 2) :
