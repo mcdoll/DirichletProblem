@@ -496,7 +496,7 @@ def _root_.Sobolev.toSobolevRestrict :
 
 @[simp]
 theorem _root_.Sobolev.toSobolevRestrict_apply
-    (f : (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule) :
+    (f : (SobolevSupportedIn F s Ω.compl)ᗮ) :
     Sobolev.toSobolevRestrict F Ω s f = f.1.restrict Ω := rfl
 
 @[simp]
@@ -509,32 +509,22 @@ def _root_.Sobolev.restrictCLM : Sobolev E F s 2 →L[ℂ] SobolevRestrict F Ω 
   (Sobolev.toSobolevRestrict F Ω s).toContinuousLinearEquiv.toContinuousLinearMap ∘L
     (SobolevSupportedIn F s Ω.compl)ᗮ.orthogonalProjection
 
--- the next two proofs are really bad - there must be some weird defeq abuse going on
+set_option backward.isDefEq.respectTransparency false in
+-- defeq abuse in coercions between closed submodules and orthogonality
 theorem root_.Sobolev.restrictCLM_apply_of_mem {f : Sobolev E F s 2}
     (hf : f ∈ SobolevSupportedIn F s Ω.compl) : f.restrictCLM F Ω s = 0 := by
   have := Submodule.orthogonalProjection_eq_zero_iff
     (K := (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule) (v := f)
   simp only [ClosedSubmodule.toSubmodule_orthogonal_eq, Submodule.orthogonal_orthogonal] at this
-  have := this.mpr hf
-  rw [Sobolev.restrictCLM]
-  simp only [ClosedSubmodule.toSubmodule_orthogonal_eq, ContinuousLinearMap.coe_comp',
-    Function.comp_apply]
-  ext1
-  erw [this]
-  simp
-  rfl
+  simp [Sobolev.restrictCLM, this.mpr hf]
 
+set_option backward.isDefEq.respectTransparency false in
+-- defeq abuse in coercions between closed submodules and orthogonality
 theorem root_.Sobolev.restrictCLM_apply_of_mem_orthogonal {f : Sobolev E F s 2}
     (hf : f ∈ (SobolevSupportedIn F s Ω.compl)ᗮ) : f.restrictCLM F Ω s = f.restrict Ω := by
-  --apply toSobolev_injective
-  have := Sobolev.supportedIn_toSobolevRestrict_apply ⟨f, hf⟩
-  simp at this
-  rw [Sobolev.restrictCLM]
-  simp only [ClosedSubmodule.toSubmodule_orthogonal_eq, ContinuousLinearMap.coe_comp',
-    Function.comp_apply]
   have := Submodule.orthogonalProjection_mem_subspace_eq_self ⟨f, hf⟩
   simp only [ClosedSubmodule.toSubmodule_orthogonal_eq] at this
-  erw [this]
+  simp [Sobolev.restrictCLM, this]
   rfl
 
 @[simp]
@@ -542,14 +532,10 @@ theorem root_.Sobolev.restrictCLM_apply (f : Sobolev E F s 2) :
     f.restrictCLM F Ω s = f.restrict Ω := by
   obtain ⟨f₁, hf₁, f₂, hf₂, h⟩ :=
     Submodule.exists_add_mem_mem_orthogonal f (K := (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule)
-  rw [h]
   simp only [ClosedSubmodule.toSubmodule_orthogonal_eq] at hf₁ hf₂
   simp only [Submodule.orthogonal_orthogonal] at hf₂
-  simp only [map_add, Sobolev.restrictCLM_apply_of_mem_orthogonal hf₁,
-    Sobolev.restrictCLM_apply_of_mem hf₂, add_zero, left_eq_add]
-  simp only [ClosedSubmodule.mem_toSubmodule_iff, Sobolev.mem_SobolevSupportedIn_iff,
-    Opens.coe_compl] at hf₂
-  exact Sobolev.restrict_eq_zero_of_dsupport hf₂
+  simpa [h, Sobolev.restrictCLM_apply_of_mem_orthogonal hf₁, Sobolev.restrictCLM_apply_of_mem hf₂]
+    using Sobolev.restrict_eq_zero_of_dsupport hf₂
 
 end InnerProductSpace
 
