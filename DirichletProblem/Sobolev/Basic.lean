@@ -112,9 +112,7 @@ instance instZero : Zero (Sobolev E F s p) where
   zero := {
     toDistr := 0
     sobFn := 0
-    bessel_toDistr_eq_sobFn := by
-      change _ = Lp.toTemperedDistributionCLM F volume p _
-      simp [-Lp.toTemperedDistributionCLM_apply] }
+    bessel_toDistr_eq_sobFn := by simp [← Lp.toTemperedDistributionCLM_apply] }
 
 @[simp]
 theorem toDistr_zero : (0 : Sobolev E F s p).toDistr = 0 := rfl
@@ -273,7 +271,7 @@ theorem _root_.SchwartzMap.toLpFunctional_apply (f : 𝓢(E, ℂ)) (g : Lp F p) 
   simp [hf]
 
 theorem toDistr_apply (f : Sobolev E F s p) (u : 𝓢(E, ℂ)) :
-    f.toDistr u = (𝓕 <| 𝓕⁻ u |>.smulLeftCLM ℂ fun x ↦ ((1 + ‖x‖ ^ 2) ^ (-s / 2))).toLpFunctional F
+    f.toDistr u = (𝓕 <| 𝓕⁻ u |>.smulLeftCLM ℂ fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)).toLpFunctional F
       f.sobFn := by
   rw [SchwartzMap.toLpFunctional_apply, ← besselPotential_neg_sobFn_eq]
   rw [besselPotential]
@@ -326,6 +324,11 @@ variable [InnerProductSpace ℂ F]
 
 namespace Sobolev
 
+variable {s : ℝ}
+
+theorem norm_fourier_sobFn_eq (f : Sobolev E F s 2) : ‖𝓕 f.sobFn‖ = ‖f‖ :=
+  LinearIsometryEquiv.norm_map' _ _
+
 instance instInnerProductSpace (s : ℝ) :
     InnerProductSpace ℂ (Sobolev E F s 2) where
   inner f g := inner ℂ f.sobFn g.sobFn
@@ -345,8 +348,6 @@ theorem smulLeftCLM_fourier_toDistr_eq {s : ℝ} (f : Sobolev E F s 2) :
 section SobolevEmbedding
 
 open scoped ZeroAtInfty
-
-variable {s : ℝ}
 
 theorem _root_.memLp_rpow_add_sq_norm (hs : Module.finrank ℝ E < 2 * s) :
     MemLp (fun x : E ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)) 2 := by
@@ -404,23 +405,133 @@ theorem toZeroAtInftyAux_apply_toTemperedDistribution (hs : Module.finrank ℝ E
 
 end SobolevEmbedding
 
-open Laplacian
+open BoundedContinuousFunction
 
-instance instLaplacian (s : ℝ) : Laplacian (Sobolev E F s 2) (Sobolev E F (s - 2) 2) where
-  laplacian f := f.memSobolev_toDistr.laplacian.toSobolev
+def foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) : E →ᵇ ℂ :=
+  ofNormedAddCommGroup (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) ?_ C ?_
+where finally
+  · have : Function.HasTemperateGrowth (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) := by fun_prop
+    exact this.1.continuous
+  · intro x
+    specialize hg₂ x
+    simp only [Complex.real_smul, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs]
+    rw [abs_eq_self.mpr (by positivity), neg_div, Real.rpow_neg (by positivity)]
+    field_simp
+    rwa [mul_comm]
+
+theorem coe_foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) :
+    (foo s C hg₁ hg₂ : E → ℂ) = (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) := rfl
+
+variable {p : ℝ≥0∞} [Fact (1 ≤ p)]
+
+def foo' {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) :
+    Lp F p (volume : Measure E) →L[ℂ] Lp F p (volume : Measure E) :=
+    (ContinuousLinearMap.lsmul ℂ ℂ).holderL volume ⊤ p p ((foo s C  hg₁ hg₂).memLp_top.toLp)
+
+theorem foo'_apply {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) (f : Lp F p (volume : Measure E)) :
+    foo' s C hg₁ hg₂ f = (foo s C hg₁ hg₂).memLp_top.toLp _ (μ := volume) • f := by
+  rfl
+
+theorem toTemperedDistribution_foo' {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) (f : Lp F p (volume : Measure E)) :
+    Lp.toTemperedDistribution (foo' s C hg₁ hg₂ f) =
+      smulLeftCLM F (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) f := by
+  rw [foo'_apply]
+  rw [MeasureTheory.Lp.toTemperedDistribution_smul_eq]
+  · rfl
+  --apply MeasureTheory.Lp.toTemperedDistribution_smul_eq
+  rw [coe_foo]
+  fun_prop
+
+/-- The Fourier multiplier with a bounded function maps `H ^ s` to `H ^ s'`. -/
+def fourierMultiplier {s : ℝ} (s' C : ℝ) {g : E → ℂ} (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) (f : Sobolev E F s 2) :
+    Sobolev E F s' 2 where
+  toDistr := fourierMultiplierCLM F g f.toDistr
+  sobFn := 𝓕⁻ (foo' (s - s') C hg₁ hg₂ (𝓕 f.sobFn))
+  bessel_toDistr_eq_sobFn := calc
+    _ = 𝓕⁻ ((smulLeftCLM F (fun x ↦ (1 + ‖x‖ ^ 2) ^ (s' / 2) • g x)) (𝓕 f.toDistr)) := by
+      rw [besselPotential, fourierMultiplierCLM_fourierMultiplierCLM_apply (by fun_prop)
+        (by fun_prop), fourierMultiplierCLM_apply]
+      congr
+      ext x
+      simp [mul_comm]
+    _ = 𝓕⁻ (Lp.toTemperedDistribution <| (foo' (s - s') C  hg₁ hg₂) (𝓕 f.sobFn)) := by
+      congr 1
+      rw [toTemperedDistribution_foo', ← Lp.fourier_toTemperedDistribution_eq,
+        ← bessel_toDistr_eq_sobFn, besselPotential, fourierMultiplierCLM_apply,
+        fourier_fourierInv_eq, smulLeftCLM_smulLeftCLM_apply (by fun_prop) (by fun_prop)]
+      congr
+      ext x
+      simp only [Complex.real_smul, neg_sub, Pi.mul_apply, ← mul_assoc, mul_eq_mul_right_iff]
+      left
+      norm_cast
+      rw [← Real.rpow_add (by positivity)]
+      congr
+      ring
+    _ = _ := by
+      rw [Lp.fourierInv_toTemperedDistribution_eq]
 
 @[simp]
-theorem laplacian_toDistr {s : ℝ} (f : Sobolev E F s 2) : (Δ f).toDistr = Δ f.toDistr := rfl
+theorem fourierMultiplier_toDistr {s : ℝ} (s' C : ℝ) {g : E → ℂ} (f : Sobolev E F s 2)
+    (hg₁ : g.HasTemperateGrowth) (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) :
+    (fourierMultiplier s' C hg₁ hg₂ f).toDistr = fourierMultiplierCLM F g f.toDistr := rfl
 
-def laplacianₗ {s : ℝ} : Sobolev E F s 2 →ₗ[ℂ] Sobolev E F (s - 2) 2 where
-  toFun := Δ
-  map_add' f g := by
-    ext1
-    simpa using (LineDeriv.laplacianCLM ℂ E 𝓢'(E, F)).map_add f.toDistr g.toDistr
-  map_smul' c f := by
-    ext1
-    simpa only [laplacian_toDistr, laplacianCLM_apply] using
-      (LineDeriv.laplacianCLM ℂ E 𝓢'(E, F)).map_smul c f.toDistr
+@[simp]
+theorem fourierMultiplier_sobFn {s : ℝ} (s' C : ℝ) {g : E → ℂ} (f : Sobolev E F s 2)
+    (hg₁ : g.HasTemperateGrowth) (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) :
+    (fourierMultiplier s' C hg₁ hg₂ f).sobFn = 𝓕⁻ (foo' (s - s') C hg₁ hg₂ (𝓕 f.sobFn)) := rfl
+
+/-- The Fourier multiplier with a bounded function maps `H ^ s` to `H ^ s`. -/
+def fourierMultiplierCLM (s s' C : ℝ) (g : E → ℂ)
+    (hg₁ : g.HasTemperateGrowth) (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) :
+    Sobolev E F s 2 →L[ℂ] Sobolev E F s' 2 :=
+  LinearMap.mkContinuous
+    { toFun := fourierMultiplier s' C hg₁ hg₂
+      map_add' f₁ f₂ := by
+        ext1
+        exact (TemperedDistribution.fourierMultiplierCLM F g).map_add f₁.toDistr f₂.toDistr
+      map_smul' c f := by
+        ext1
+        exact (TemperedDistribution.fourierMultiplierCLM F g).map_smul c f.toDistr }
+    ‖(foo' (s - s') C hg₁ hg₂ (E := E) (F := F) (p := 2))‖ <| by
+    intro f
+    simp only [LinearMap.coe_mk, AddHom.coe_mk, ← norm_fourier_sobFn_eq, fourierMultiplier_sobFn,
+      fourier_fourierInv_eq]
+    exact (foo' (s - s') C hg₁ hg₂).le_opNorm (𝓕 f.sobFn)
+
+@[simp]
+theorem fourierMultiplierCLM_apply (s s' C : ℝ) (g : E → ℂ)
+    (hg₁ : g.HasTemperateGrowth) (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2))
+    (f : Sobolev E F s 2) :
+    f.fourierMultiplierCLM s s' C g hg₁ hg₂ = f.fourierMultiplier s' C hg₁ hg₂ := rfl
+
+open Laplacian Real
+
+set_option backward.isDefEq.respectTransparency false in -- because of real-complex nonsense
+variable (E F) in
+def laplacian (s : ℝ) : Sobolev E F s 2 →L[ℂ] Sobolev E F (s - 2) 2 :=
+  -(2 * π) ^ 2 • (fourierMultiplierCLM s (s - 2) 1 (fun x ↦ Complex.ofReal <| ‖x‖ ^ 2) ?_ ?_)
+where finally
+  · fun_prop
+  · simp
+
+instance instLaplacian (s : ℝ) : Laplacian (Sobolev E F s 2) (Sobolev E F (s - 2) 2) where
+  laplacian f := f.laplacian E F s
+
+@[simp]
+theorem laplacian_apply (f : Sobolev E F s 2) : f.laplacian E F s = Δ f := rfl
+
+set_option backward.isDefEq.respectTransparency false in -- because of real-complex nonsense
+@[simp]
+theorem laplacian_toDistr {s : ℝ} (f : Sobolev E F s 2) : (Δ f).toDistr = Δ f.toDistr := by
+  rw [← laplacian_apply, laplacian, ContinuousLinearMap.smul_apply,
+    fourierMultiplierCLM_apply, toDistr_smul, fourierMultiplier_toDistr,
+    laplacian_eq_fourierMultiplierCLM]
 
 end Sobolev
 
