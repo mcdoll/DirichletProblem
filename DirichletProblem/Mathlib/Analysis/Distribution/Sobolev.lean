@@ -58,6 +58,14 @@ section normed
 
 variable [NormedSpace ℂ F]
 
+theorem fourierMultiplierCLM_comm {g₁ g₂ : E → ℂ} (hg₁ : g₁.HasTemperateGrowth)
+    (hg₁ : g₂.HasTemperateGrowth) (f : 𝓢'(E, F)) :
+    fourierMultiplierCLM F g₁ (fourierMultiplierCLM F g₂ f) =
+      fourierMultiplierCLM F g₂ (fourierMultiplierCLM F g₁ f) := by
+  rw [fourierMultiplierCLM_fourierMultiplierCLM_apply (by fun_prop) (by fun_prop)]
+  rw [fourierMultiplierCLM_fourierMultiplierCLM_apply (by fun_prop) (by fun_prop)]
+  rw [mul_comm]
+
 variable (E F) in
 /-- The Bessel potential operator is the Fourier multiplier with the function
 `(1 + ‖x‖ ^ 2) ^ (s / 2)`.
@@ -96,6 +104,12 @@ theorem besselPotential_neg_apply_eq_iff (s : ℝ) (f g : 𝓢'(E, F)) :
     besselPotential E F (-s) f = g ↔ besselPotential E F s g = f := by
   constructor
   all_goals { intro h; simp [← h] }
+
+theorem besselPotential_fourierMultiplierCLM_comm (s : ℝ) {g : E → ℂ} (hg₁ : g.HasTemperateGrowth)
+    (f : 𝓢'(E, F)) :
+    besselPotential E F s (fourierMultiplierCLM F g f) =
+      fourierMultiplierCLM F g (besselPotential E F s f) := by
+  rw [besselPotential, fourierMultiplierCLM_comm (by fun_prop) (by fun_prop)]
 
 open scoped Real Laplacian LineDeriv
 
