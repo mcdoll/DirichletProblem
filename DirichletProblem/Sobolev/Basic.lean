@@ -563,7 +563,39 @@ theorem mono_apply_eq_zero_of_lt (h : s < s') (f : Sobolev E F s 2) :
   have h : ¬ s' ≤ s := by grind
   simp [mono, h]
 
-open Laplacian Real
+open LineDeriv Laplacian Real
+
+set_option backward.isDefEq.respectTransparency false in -- because of real-complex nonsense
+variable (F) in
+def lineDerivOp (s : ℝ) (m : E) : Sobolev E F s 2 →L[ℂ] Sobolev E F (s - 1) 2 :=
+  (2 * π * Complex.I) • (fourierMultiplierCLM s (s - 1) ‖m‖ (fun x ↦ Complex.ofReal <| inner ℝ x m)
+    ?_ ?_)
+where finally
+  · fun_prop
+  · intro x
+    simp only [Complex.norm_real, norm_eq_abs, _root_.sub_sub_cancel, one_div]
+    grw [abs_real_inner_le_norm]
+    rw [mul_comm]
+    gcongr
+    apply le_of_sq_le_sq _ (by positivity)
+    calc
+      _ ≤ 1 + ‖x‖ ^ 2 := by simp
+      _ = ((1 + ‖x‖ ^ 2) ^ (1 / 2 : ℝ)) ^ (2 : ℝ) := by
+        rw [← Real.rpow_mul (by positivity)]; simp
+      _ = _ := by simp
+
+instance instLineDeriv (s : ℝ) : LineDeriv E (Sobolev E F s 2) (Sobolev E F (s - 1) 2) where
+  lineDerivOp m f := f.lineDerivOp F s m
+
+@[simp]
+theorem lineDerivOp_apply (m : E) (f : Sobolev E F s 2) : f.lineDerivOp F s m = ∂_{m} f := rfl
+
+@[simp]
+theorem lineDerivOp_toDistr (m : E) {s : ℝ} (f : Sobolev E F s 2) :
+    (∂_{m} f).toDistr = ∂_{m} f.toDistr := by
+  rw [← lineDerivOp_apply, lineDerivOp, ContinuousLinearMap.smul_apply,
+    toDistr_smul, fourierMultiplierCLM_toDistr,
+    lineDeriv_eq_fourierMultiplierCLM]
 
 set_option backward.isDefEq.respectTransparency false in -- because of real-complex nonsense
 variable (E F) in
