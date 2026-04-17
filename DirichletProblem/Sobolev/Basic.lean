@@ -12,10 +12,11 @@ public import Mathlib.Analysis.Fourier.LpSpace
 
 @[expose] public noncomputable section
 
+variable {E F : Type*}
+
 namespace TemperedDistribution
 
-variable {E F : Type*}
-  [NormedAddCommGroup E] [NormedAddCommGroup F]
+variable [NormedAddCommGroup E] [NormedAddCommGroup F]
   [InnerProductSpace ℝ E] [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
   [InnerProductSpace ℂ F] [CompleteSpace F]
 
@@ -32,8 +33,99 @@ theorem MemSobolev.zeroAtInfty {s : ℝ} (hs : Module.finrank ℝ E < 2 * s) {f 
 
 end TemperedDistribution
 
-variable {E F : Type*}
-  [NormedAddCommGroup E] [NormedAddCommGroup F]
+section BCF
+
+variable [NormedAddCommGroup E] [NormedAddCommGroup F]
+  [InnerProductSpace ℝ E] [NormedSpace ℂ F]
+
+open scoped ENNReal
+open BoundedContinuousFunction MeasureTheory
+
+def foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) : E →ᵇ ℂ :=
+  ofNormedAddCommGroup (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) ?_ C ?_
+where finally
+  · have : Function.HasTemperateGrowth (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) := by fun_prop
+    exact this.1.continuous
+  · intro x
+    specialize hg₂ x
+    simp only [Complex.real_smul, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs]
+    rw [abs_eq_self.mpr (by positivity), neg_div, Real.rpow_neg (by positivity)]
+    field_simp
+    rwa [mul_comm]
+
+theorem coe_foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) :
+    (foo s C hg₁ hg₂ : E → ℂ) = (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) := rfl
+
+variable [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
+  {p : ℝ≥0∞} [Fact (1 ≤ p)]
+
+def foo' {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) :
+    Lp F p (volume : Measure E) →L[ℂ] Lp F p (volume : Measure E) :=
+    (ContinuousLinearMap.lsmul ℂ ℂ).holderL volume ⊤ p p ((foo s C  hg₁ hg₂).memLp_top.toLp)
+
+theorem foo'_apply {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) (f : Lp F p (volume : Measure E)) :
+    foo' s C hg₁ hg₂ f = (foo s C hg₁ hg₂).memLp_top.toLp _ (μ := volume) • f := by
+  rfl
+
+end BCF
+
+section Lp
+
+open BoundedContinuousFunction MeasureTheory Lp
+
+variable [NormedAddCommGroup E] [NormedAddCommGroup F]
+  [InnerProductSpace ℝ E] [NormedSpace ℂ F]
+  [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
+
+variable {s : ℝ}
+
+-- define the function as an `Lp` function (complex-valued)
+
+theorem _root_.MeasureTheory.Lp.memLp_rpow_add_sq_norm (hs : Module.finrank ℝ E < 2 * s) :
+    MemLp (fun x : E ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)) 2 := by
+  constructor
+  · have : (fun x : E ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)).HasTemperateGrowth := by
+      fun_prop
+    exact this.1.continuous.aestronglyMeasurable
+  · rw [eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)]
+    suffices h : ∫⁻ a : E, ENNReal.ofReal ‖(1 + ‖a‖ ^ 2) ^ (-s)‖ < ⊤ from by
+      norm_cast
+      simp_rw [ofReal_norm] at h
+      simp_rw [← enorm_pow]
+      convert h using 4
+      rw [← Real.rpow_mul_natCast (by positivity)]
+      simp
+    apply ((integrable_rpow_neg_one_add_norm_sq hs).congr _).lintegral_lt_top
+    filter_upwards with x
+    rw [Real.norm_eq_abs, abs_eq_self.mpr (by positivity)]
+    congr
+    ring
+
+theorem _root_.MeasureTheory.Lp.memLp_ofReal_rpow_add_sq_norm (hs : Module.finrank ℝ E < 2 * s) :
+    MemLp (fun x : E ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (-s / 2) : ℝ)) 2 := by
+  apply (memLp_rpow_add_sq_norm hs).ofReal
+
+variable (E F s) in
+private
+def blubb : Lp F 2 (volume : Measure E) →L[ℂ] Lp F 1 (volume : Measure E) :=
+  if hs : Module.finrank ℝ E < 2 * s then
+    (ContinuousLinearMap.lsmul ℂ ℂ).holderL (volume : Measure E) 2 2 1
+      (memLp_ofReal_rpow_add_sq_norm hs).toLp
+  else 0
+
+private
+theorem blubb_apply (hs : Module.finrank ℝ E < 2 * s) (f : Lp F 2 (volume : Measure E)) :
+    blubb E F s f = (memLp_ofReal_rpow_add_sq_norm hs).toLp • f := by
+  simp only [blubb, hs, ↓reduceDIte]
+  rfl
+
+end Lp
+
+variable [NormedAddCommGroup E] [NormedAddCommGroup F]
   [InnerProductSpace ℝ E] [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
   [CompleteSpace F]
 
@@ -383,34 +475,7 @@ section BCF
 
 open BoundedContinuousFunction
 
-def foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
-    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) : E →ᵇ ℂ :=
-  ofNormedAddCommGroup (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) ?_ C ?_
-where finally
-  · have : Function.HasTemperateGrowth (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) := by fun_prop
-    exact this.1.continuous
-  · intro x
-    specialize hg₂ x
-    simp only [Complex.real_smul, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs]
-    rw [abs_eq_self.mpr (by positivity), neg_div, Real.rpow_neg (by positivity)]
-    field_simp
-    rwa [mul_comm]
-
-theorem coe_foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
-    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) :
-    (foo s C hg₁ hg₂ : E → ℂ) = (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) := rfl
-
 variable {p : ℝ≥0∞} [Fact (1 ≤ p)]
-
-def foo' {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
-    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) :
-    Lp F p (volume : Measure E) →L[ℂ] Lp F p (volume : Measure E) :=
-    (ContinuousLinearMap.lsmul ℂ ℂ).holderL volume ⊤ p p ((foo s C  hg₁ hg₂).memLp_top.toLp)
-
-theorem foo'_apply {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
-    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) (f : Lp F p (volume : Measure E)) :
-    foo' s C hg₁ hg₂ f = (foo s C hg₁ hg₂).memLp_top.toLp _ (μ := volume) • f := by
-  rfl
 
 theorem toTemperedDistribution_foo' {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
     (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) (f : Lp F p (volume : Measure E)) :
@@ -440,44 +505,7 @@ end BCF
 section SobolevEmbedding
 
 open scoped ZeroAtInfty
-
-theorem _root_.memLp_rpow_add_sq_norm (hs : Module.finrank ℝ E < 2 * s) :
-    MemLp (fun x : E ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)) 2 := by
-  constructor
-  · have : (fun x : E ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)).HasTemperateGrowth := by
-      fun_prop
-    exact this.1.continuous.aestronglyMeasurable
-  · rw [eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)]
-    suffices h : ∫⁻ a : E, ENNReal.ofReal ‖(1 + ‖a‖ ^ 2) ^ (-s)‖ < ⊤ from by
-      norm_cast
-      simp_rw [ofReal_norm] at h
-      simp_rw [← enorm_pow]
-      convert h using 4
-      rw [← Real.rpow_mul_natCast (by positivity)]
-      simp
-    apply ((integrable_rpow_neg_one_add_norm_sq hs).congr _).lintegral_lt_top
-    filter_upwards with x
-    rw [Real.norm_eq_abs, abs_eq_self.mpr (by positivity)]
-    congr
-    ring
-
-theorem _root_.memLp_ofReal_rpow_add_sq_norm (hs : Module.finrank ℝ E < 2 * s) :
-    MemLp (fun x : E ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (-s / 2) : ℝ)) 2 := by
-  apply (memLp_rpow_add_sq_norm hs).ofReal
-
-variable (E F) in
-private
-def blubb (s : ℝ) : Lp F 2 (volume : Measure E) →L[ℂ] Lp F 1 (volume : Measure E) :=
-  if hs : Module.finrank ℝ E < 2 * s then
-    (ContinuousLinearMap.lsmul ℂ ℂ).holderL (volume : Measure E) 2 2 1
-      (memLp_ofReal_rpow_add_sq_norm hs).toLp
-  else 0
-
-private
-theorem blubb_apply (hs : Module.finrank ℝ E < 2 * s) (f : Lp F 2 (volume : Measure E)) :
-    blubb E F s f = (memLp_ofReal_rpow_add_sq_norm hs).toLp • f := by
-  simp only [blubb, hs, ↓reduceDIte]
-  rfl
+open MeasureTheory.Lp
 
 variable (E F) in
 /-- The *Sobolev embedding theorem* -/
