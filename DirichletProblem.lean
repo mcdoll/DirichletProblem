@@ -1,9 +1,13 @@
 import DirichletProblem.Mathlib.Analysis.Asymptotics.Lemmas
+import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Basic
 import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 import DirichletProblem.Mathlib.Analysis.Distribution.Sobolev
+import DirichletProblem.Mathlib.Analysis.Distribution.Support
 import DirichletProblem.Mathlib.Analysis.Distribution.TemperedDistribution
 import DirichletProblem.Mathlib.Analysis.Fourier.FourierTransform
 import DirichletProblem.Mathlib.Analysis.Fourier.ZeroAtInfty
 import DirichletProblem.Mathlib.MeasureTheory.Function.Holder
 import DirichletProblem.Mathlib.MeasureTheory.Function.LpSpace.ContinuousFunctions
 import DirichletProblem.Sobolev.Basic
+import DirichletProblem.Sobolev.Restrict
+import DirichletProblem.Sobolev.SupportedIn
