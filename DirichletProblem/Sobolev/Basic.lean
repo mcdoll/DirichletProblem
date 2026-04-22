@@ -6,6 +6,7 @@ Authors: Moritz Doll
 module
 
 public import DirichletProblem.Mathlib.Analysis.Distribution.Sobolev
+public import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Basic
 public import DirichletProblem.Mathlib.Analysis.Fourier.ZeroAtInfty
 public import DirichletProblem.Mathlib.Analysis.Distribution.TemperedDistribution
 public import Mathlib.Analysis.Fourier.LpSpace
@@ -356,6 +357,7 @@ instance instCompleteSpace : CompleteSpace (Sobolev E F s p) :=
 open ContinuousLinearMap
 
 variable (F) in
+/-- A Schwartz function defines a continuous linear map from `Lp` to `F` via integration. -/
 def _root_.SchwartzMap.toLpFunctional (f : 𝓢(E, ℂ)) : Lp F p (volume : Measure E) →L[ℂ] F :=
   haveI := ENNReal.HolderConjugate.inv_one_sub_inv' hp.out
   haveI : Fact (1 ≤ (1 - p⁻¹)⁻¹) := by simp [fact_iff]
@@ -364,8 +366,7 @@ def _root_.SchwartzMap.toLpFunctional (f : 𝓢(E, ℂ)) : Lp F p (volume : Meas
 @[simp]
 theorem _root_.SchwartzMap.toLpFunctional_apply (f : 𝓢(E, ℂ)) (g : Lp F p) :
     f.toLpFunctional F g = ∫ x, f x • g x := by
-  rw [SchwartzMap.toLpFunctional]
-  rw [ContinuousLinearMap.lpPairing_eq_integral]
+  rw [SchwartzMap.toLpFunctional, ContinuousLinearMap.lpPairing_eq_integral]
   apply integral_congr_ae
   filter_upwards [f.coeFn_toLp (1 - p⁻¹)⁻¹] with x hf
   simp [hf]
@@ -383,7 +384,7 @@ theorem toDistr_apply (f : Sobolev E F s p) (u : 𝓢(E, ℂ)) :
   exact Function.hasTemperateGrowth_one_add_norm_sq_rpow E (-s / 2)
 
 variable (E F s p) in
-/-- The map from bounded continuous functions to `Lp` with `p = ⊤` as a continuous linear map. -/
+/-- The map from Sobolev functions `H^{s,p}` to `𝓢'` as a continuous linear map. -/
 def toTemperedDistributionCLM : Sobolev E F s p →L[ℂ] 𝓢'(E, F) where
   toFun f := f.toDistr
   map_add' := toDistr_add
@@ -419,6 +420,29 @@ theorem to_Distr_toSobolev (f : 𝓢(E, F)) :
     ← fourierMultiplierCLM_toTemperedDistributionCLM_eq (by fun_prop), ← besselPotential]
   simp
 
+theorem norm_toSobolev (f : 𝓢(E, F)) : ‖f.toSobolev E F s p‖ = ‖f.fourierMultiplierCLM F
+    (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2) : ℝ)) |>.toLp p‖ := by
+  simp [toSobolev_apply, ← Sobolev.norm_sobFn_eq]
+
+variable (E F s) in
+theorem denseRange_toSobolev (hp : p ≠ ⊤) : DenseRange (toSobolev E F s p) := by
+  simp only [toSobolev, LinearIsometryEquiv.toContinuousLinearEquiv_symm,
+    ContinuousLinearMap.coe_comp', ContinuousLinearEquiv.coe_coe,
+    LinearIsometryEquiv.coe_symm_toContinuousLinearEquiv]
+  apply (Sobolev.toLpₗᵢ E F s p).symm.surjective.denseRange.comp _ (by fun_prop)
+  apply (denseRange_toLpCLM hp).comp _ (by fun_prop)
+  apply Function.Surjective.denseRange
+  intro f
+  use f.fourierMultiplierCLM F (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (-s / 2) : ℝ))
+  rw [fourierMultiplierCLM_fourierMultiplierCLM_apply (by fun_prop) (by fun_prop)]
+  convert DFunLike.ext_iff.mp (fourierMultiplierCLM_const (1 : ℂ)) f
+  · rw [Pi.mul_apply]
+    norm_cast
+    rw [← Real.rpow_add (by positivity)]
+    ring_nf
+    simp
+  · simp
+
 -- dense range
 
 end SchwartzMap
@@ -447,6 +471,17 @@ end normed
 section inner
 
 variable [InnerProductSpace ℂ F]
+
+namespace SchwartzMap
+
+variable {s : ℝ}
+
+/-- The Sobolev norm is given by `‖(1 + |x| ^ 2) ^ (s / 2) • 𝓕 f ξ‖`. -/
+theorem norm_toSobolev_eq_smulLeftCLM_fourier (f : 𝓢(E, F)) : ‖f.toSobolev E F s 2‖ =
+    ‖(𝓕 f).smulLeftCLM F (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2) : ℝ)) |>.toLp 2‖ := by
+  rw [norm_toSobolev, fourierMultiplierCLM_apply, norm_fourierInv_toL2_eq]
+
+end SchwartzMap
 
 namespace Sobolev
 
@@ -484,7 +519,6 @@ theorem toTemperedDistribution_foo' {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTe
   rw [foo'_apply]
   rw [MeasureTheory.Lp.toTemperedDistribution_smul_eq]
   · rfl
-  --apply MeasureTheory.Lp.toTemperedDistribution_smul_eq
   rw [coe_foo]
   fun_prop
 
@@ -542,6 +576,52 @@ theorem toZeroAtInfty_apply_toTemperedDistribution (hs : Module.finrank ℝ E < 
 
 end SobolevEmbedding
 
+section Trace
+
+variable {E' : Type*} [NormedAddCommGroup E'] [InnerProductSpace ℝ E']
+  [FiniteDimensional ℝ E'] [MeasurableSpace E'] [BorelSpace E']
+
+variable (f : 𝓢(E × E', F)) (a : E')
+
+variable (E F s) in
+/-- The trace operator `H ^ s (E × E') →L[ℂ] H ^ s E`
+
+For `s > -d/2` this is an extension of the trace on Schwartz functions. -/
+@[no_expose]
+def restrictFst (a : E') : Sobolev (WithLp 2 (E × E')) F s 2 →L[ℂ] Sobolev E F s 2 :=
+  f.extendOfNorm e
+where
+  f := SchwartzMap.toSobolev E F s 2 ∘L
+    SchwartzMap.restrictFst ℂ E F a ∘L
+    (SchwartzMap.precompProdLp ℂ 2).symm.toContinuousLinearMap
+      |>.toLinearMap
+  e := (SchwartzMap.toSobolev (WithLp 2 (E × E')) F s 2).toLinearMap
+
+private theorem denseRange_e : DenseRange (restrictFst.e E F s (E' := E')) :=
+  SchwartzMap.denseRange_toSobolev _ F s (by simp)
+
+def restrictConst (_s _d : ℝ) : ℝ := 5
+
+theorem restrictConst_nonneg {d : ℝ} : 0 ≤ restrictConst s d := by
+  sorry
+
+private theorem norm_restrictFst_f_le (a : E') (hs : s < 1 / 2) (f : 𝓢(WithLp 2 (E × E'), F)) :
+    ‖(restrictFst.f E F s a) f‖ ≤
+    (restrictConst s (Module.finrank ℝ E)) * ‖(restrictFst.e E F s) f‖ := by
+  sorry
+
+theorem restrictFst_toSobolev_eq (f : 𝓢(WithLp 2 (E × E'), F)) (hs : s < 1 / 2) :
+    (f.toSobolev _ _ s 2).restrictFst E F s a =
+    ((SchwartzMap.precompProdLp ℂ 2).symm f |>.restrictFst ℂ E F a).toSobolev E F s 2 := by
+  apply LinearMap.extendOfNorm_eq denseRange_e
+  exact ⟨restrictConst s (Module.finrank ℝ E), norm_restrictFst_f_le a hs⟩
+
+theorem norm_restrictFst_le (a : E') (hs : s < 1 / 2) :
+    ‖Sobolev.restrictFst E F s a‖ ≤ restrictConst s (Module.finrank ℝ E) :=
+  LinearMap.opNorm_extendOfNorm_le denseRange_e restrictConst_nonneg (norm_restrictFst_f_le a hs)
+
+end Trace
+
 @[no_expose]
 def fourierMultiplierCLM (s s' C : ℝ) (g : E → ℂ)
     (hg₁ : g.HasTemperateGrowth) (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) :
@@ -579,7 +659,7 @@ def mono (s s' : ℝ) :
     0
 where finally
   simp only [one_mem, CStarRing.norm_of_mem_unitary, one_mul]
-  refine Real.one_le_rpow (by simp) (by grind)
+  exact Real.one_le_rpow (by simp) (by grind)
 
 variable {s' : ℝ}
 
