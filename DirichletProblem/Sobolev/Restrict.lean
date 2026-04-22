@@ -71,7 +71,7 @@ def toSchwartzMapCLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →L[�
     obtain ⟨C, hC_pos, hC⟩ := exists_norm_pow_le K n
     use {k}, ⟨C, hC_pos⟩, fun f ↦ ?_
     simp only [SchwartzMap.schwartzSeminormFamily_apply, Seminorm.comp_apply,
-      Finset.sup_singleton, Seminorm.smul_apply, NNReal.smul_def, NNReal.coe_mk, smul_eq_mul]
+      Finset.sup_singleton, Seminorm.smul_apply, NNReal.smul_def, smul_eq_mul]
     apply SchwartzMap.seminorm_le_bound 𝕜 n k _ (by positivity)
     intro x
     by_cases! hx : x ∈ K
