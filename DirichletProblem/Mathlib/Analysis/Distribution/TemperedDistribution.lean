@@ -14,14 +14,30 @@ open scoped Nat NNReal ContDiff
 
 variable {ι 𝕜 E F F₁ F₂ : Type*}
 
+namespace MeasureTheory.Measure
+
+open TemperedDistribution
+
+variable [NormedAddCommGroup E] [NormedSpace ℝ E]
+  [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
+  (μ : Measure E) [hμ : μ.HasTemperateGrowth]
+
+theorem smulLeftCLM_toTemperedDistribution {f : E → ℂ} (hf : f.HasTemperateGrowth) :
+    smulLeftCLM ℂ f μ.toTemperedDistribution = hf.toTemperedDistribution μ := by
+  ext u
+  simp [SchwartzMap.smulLeftCLM_apply hf, mul_comm]
+
+
+end MeasureTheory.Measure
+
 namespace MeasureTheory.LocallyIntegrable
 
 variable [NormedAddCommGroup E] [NormedAddCommGroup F] [NormedSpace ℝ E] [NormedSpace ℂ F]
 
-open Asymptotics Filter
-
 variable [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
   {μ : Measure E} [hμ : μ.HasTemperateGrowth]
+
+open Asymptotics Filter
 
 theorem integrable_schwartzMap_smul {f : E → F} {k : ℕ} (hf : LocallyIntegrable f μ)
     (hf' : f =O[cocompact E] (‖·‖ ^ k)) (g : 𝓢(E, ℂ)) :

@@ -141,11 +141,28 @@ theorem restrict_eq_zero {u : 𝓢'(E, F)} (hu : dsupport u ⊆ Ωᶜ) : u.restr
   ext f
   exact isVanishingOn_dsupport_subset_compl hu _ (TestFunction.tsupport_toSchwartzMapCLM_subset _)
 
+open scoped ContDiff Topology
+
 theorem eq_of_restrict {f g : 𝓢'(E, F)} {u : 𝓢(E, ℂ)} (h₁ : f.restrict Ω = g.restrict Ω)
     (h₂ : tsupport u ⊆ Ω) : f u = g u := by
   -- Need that smooth compactly supported functions are dense in `𝓢`.
-
-  sorry
+  have : ∃ g : E → ℝ, HasCompactSupport g ∧ ContDiff ℝ ∞ g ∧ g 0 = 1 := by sorry
+  obtain ⟨g', hg'₁, hg'₂, hg'₃⟩ := this
+  let h := hg'₁.toSchwartzMap hg'₂
+  set a : ℝ → 𝓢(E, ℂ) := fun r ↦ (SchwartzMap.smulLeftCLM ℂ fun x ↦ h (r⁻¹ • x)) u
+  have h_zero : h 0 = 1 := hg'₃
+  have h_lim : Filter.Tendsto a Filter.atTop (𝓝 u) := u.foo h_zero
+  have ha : ∀ r > 0, f (a r) = g (a r) := by
+    sorry
+  have hf_lim : Filter.Tendsto (f ∘ a) Filter.atTop (𝓝 (f u)) :=
+    (f.continuous.tendsto _).comp h_lim
+  have hg_lim : Filter.Tendsto (f ∘ a) Filter.atTop (𝓝 (g u)) := by
+    apply Filter.Tendsto.congr' _ ((g.continuous.tendsto _).comp h_lim)
+    rw [Filter.EventuallyEq, Filter.eventually_atTop]
+    use 1
+    intro r hr
+    exact (ha r (by positivity)).symm
+  apply tendsto_nhds_unique hf_lim hg_lim
 
 end TemperedDistribution
 
@@ -307,7 +324,7 @@ theorem restrict_chooseSobolev {f : SobolevRestrict F Ω s} :
   ext1
   apply restrict_toDistr_chooseSobolev
 
-theorem bla' {f g : Sobolev E F s 2} (h : f.restrict Ω = g.restrict Ω) :
+theorem sub_mem_sobolevSupportedIn {f g : Sobolev E F s 2} (h : f.restrict Ω = g.restrict Ω) :
     f - g ∈ SobolevSupportedIn F s Ω.compl := by
   simp only [Sobolev.mem_SobolevSupportedIn_iff, Sobolev.toDistr_sub, Opens.coe_compl]
   rw [Set.subset_compl_comm]
@@ -348,7 +365,7 @@ theorem toSobolev_mem (f : SobolevRestrict F Ω s) :
 theorem toSobolev_restrict {f : Sobolev E F s 2} (hf : f ∈ (SobolevSupportedIn F s Ω.compl)ᗮ) :
     (f.restrict Ω).toSobolev = f := by
   have mem : (f.restrict Ω).toSobolev - f ∈ SobolevSupportedIn F s Ω.compl := by
-    apply bla'
+    apply sub_mem_sobolevSupportedIn
     rw [restrict_toSobolev]
   have mem_ortho : (f.restrict Ω).toSobolev - f ∈ (SobolevSupportedIn F s Ω.compl)ᗮ := by
     simp only [← ClosedSubmodule.mem_toSubmodule_iff] at hf
@@ -391,7 +408,7 @@ def _root_.Sobolev.supportedIn_toSobolevRestrict :
   map_add' f g := by
     ext1
     simp
-    -- some lemma is missing here:
+    -- some lemma is missing here: (norm_cast closes the goal)
     rfl
   map_smul' c f := by
     ext1

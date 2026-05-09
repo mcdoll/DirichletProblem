@@ -148,6 +148,9 @@ structure Sobolev (s : ℝ) (p : ℝ≥0∞) [hp : Fact (1 ≤ p)] where
   sobFn : Lp F p (volume : Measure E)
   bessel_toDistr_eq_sobFn : besselPotential E F s toDistr = sobFn
 
+structure Sobolev' (_s : ℝ) (p : ℝ≥0∞) where
+  sobFn :Lp F p (volume : Measure E)
+
 namespace Sobolev
 
 variable {s s' : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
@@ -588,10 +591,11 @@ variable (E F s) in
 
 For `s > -d/2` this is an extension of the trace on Schwartz functions. -/
 @[no_expose]
-def restrictFst (a : E') : Sobolev (WithLp 2 (E × E')) F s 2 →L[ℂ] Sobolev E F s 2 :=
+def restrictFst (a : E') :
+    Sobolev (WithLp 2 (E × E')) F s 2 →L[ℂ] Sobolev E F (s - (Module.finrank ℝ E') / 2) 2 :=
   f.extendOfNorm e
 where
-  f := SchwartzMap.toSobolev E F s 2 ∘L
+  f := SchwartzMap.toSobolev E F (s - (Module.finrank ℝ E') / 2) 2 ∘L
     SchwartzMap.restrictFst ℂ E F a ∘L
     (SchwartzMap.precompProdLp ℂ 2).symm.toContinuousLinearMap
       |>.toLinearMap
@@ -602,23 +606,77 @@ private theorem denseRange_e : DenseRange (restrictFst.e E F s (E' := E')) :=
 
 def restrictConst (_s _d : ℝ) : ℝ := 5
 
-theorem restrictConst_nonneg {d : ℝ} : 0 ≤ restrictConst s d := by
+theorem restrictConst_nonneg (s d : ℝ) : 0 ≤ restrictConst s d := by
   sorry
 
-private theorem norm_restrictFst_f_le (a : E') (hs : s < 1 / 2) (f : 𝓢(WithLp 2 (E × E'), F)) :
+open Qq Mathlib.Meta.Positivity in
+@[positivity restrictConst _ _]
+meta def restrictConst_positivity_ext : PositivityExt where eval {u a} _ _ e := do
+  match u, a, e with
+  | 0, ~q(ℝ), ~q(restrictConst $s $d) =>
+    assertInstancesCommute
+    return .nonnegative q(restrictConst_nonneg $s $d)
+  | _, _, _ => throwError "not Sobolev.restrictConst"
+
+open Module in
+private theorem norm_restrictFst_f_le (a : E') (hs : finrank ℝ E' < 2 * s)
+    (f : 𝓢(WithLp 2 (E × E'), F)) :
     ‖(restrictFst.f E F s a) f‖ ≤
-    (restrictConst s (Module.finrank ℝ E)) * ‖(restrictFst.e E F s) f‖ := by
-  sorry
+    (restrictConst s (finrank ℝ E)) * ‖(restrictFst.e E F s) f‖ := by
+  let s' := s - (finrank ℝ E') / 2
+  apply le_of_sq_le_sq _ (by positivity)
+  calc
+    _ = ∫ (x : E),
+        ‖((SchwartzMap.smulLeftCLM F fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s' / 2)))
+                (𝓕 ((SchwartzMap.restrictFst ℂ E F a) ((SchwartzMap.precompProdLp ℂ 2).symm f))))
+              x‖ ^ 2 := by
+      simp only [restrictFst.f, ContinuousLinearMap.coe_comp, LinearMap.coe_comp,
+        ContinuousLinearMap.coe_coe, ContinuousLinearEquiv.coe_coe, Function.comp_apply,
+        SchwartzMap.norm_toSobolev_eq_smulLeftCLM_fourier, ne_eq, OfNat.ofNat_ne_zero,
+        not_false_eq_true, ofNat_ne_top, SchwartzMap.norm_toLp', toReal_ofNat, Real.rpow_ofNat]
+      -- the next three lines should be their own tactic
+      simp only [← Real.rpow_ofNat]
+      rw [← Real.rpow_mul (by positivity)]
+      simp only [Real.rpow_ofNat, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, inv_mul_cancel₀,
+        Real.rpow_one, s']
+    _ = ∫ (x : E),
+        ‖(1 + ‖x‖ ^ 2) ^ (s' / 2) •
+                (𝓕 ((SchwartzMap.restrictFst ℂ E F a) ((SchwartzMap.precompProdLp ℂ 2).symm f)))
+              x‖ ^ 2 := by
+      congr
+      ext x
+      rw [SchwartzMap.smulLeftCLM_apply_apply (by fun_prop)]
+      simp
+    _ ≤ restrictConst s (finrank ℝ E) ^ 2 *
+        ∫ ξ, ‖(1 + ‖ξ‖ ^ 2) ^ (s / 2) • 𝓕 f ξ‖ ^ 2 := by
+      sorry
+    _ = _ := by
+      simp only [restrictFst.e, ContinuousLinearMap.coe_coe,
+        SchwartzMap.norm_toSobolev_eq_smulLeftCLM_fourier, mul_pow, mul_eq_mul_left_iff, ne_eq,
+        OfNat.ofNat_ne_zero, not_false_eq_true, pow_eq_zero_iff]
+      left
+      simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, ofNat_ne_top,
+        SchwartzMap.norm_toLp', toReal_ofNat]
+      -- the next three lines should be their own tactic
+      simp only [← Real.rpow_ofNat]
+      rw [← Real.rpow_mul (by positivity)]
+      simp only [Real.rpow_ofNat, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, inv_mul_cancel₀,
+        Real.rpow_one]
+      congr
+      ext x
+      rw [SchwartzMap.smulLeftCLM_apply_apply (by fun_prop)]
+      simp
 
-theorem restrictFst_toSobolev_eq (f : 𝓢(WithLp 2 (E × E'), F)) (hs : s < 1 / 2) :
+theorem restrictFst_toSobolev_eq (f : 𝓢(WithLp 2 (E × E'), F)) (hs : Module.finrank ℝ E' < 2 * s) :
     (f.toSobolev _ _ s 2).restrictFst E F s a =
-    ((SchwartzMap.precompProdLp ℂ 2).symm f |>.restrictFst ℂ E F a).toSobolev E F s 2 := by
+    ((SchwartzMap.precompProdLp ℂ 2).symm f |>.restrictFst ℂ E F a).toSobolev E F
+      (s - (Module.finrank ℝ E')/2) 2 := by
   apply LinearMap.extendOfNorm_eq denseRange_e
   exact ⟨restrictConst s (Module.finrank ℝ E), norm_restrictFst_f_le a hs⟩
 
-theorem norm_restrictFst_le (a : E') (hs : s < 1 / 2) :
+theorem norm_restrictFst_le (a : E') (hs : Module.finrank ℝ E' < 2 * s) :
     ‖Sobolev.restrictFst E F s a‖ ≤ restrictConst s (Module.finrank ℝ E) :=
-  LinearMap.opNorm_extendOfNorm_le denseRange_e restrictConst_nonneg (norm_restrictFst_f_le a hs)
+  LinearMap.opNorm_extendOfNorm_le denseRange_e (by positivity) (norm_restrictFst_f_le a hs)
 
 end Trace
 
@@ -725,6 +783,37 @@ theorem laplacian_toDistr {s : ℝ} (f : Sobolev E F s 2) : (Δ f).toDistr = Δ 
   rw [← laplacian_apply, laplacian, ContinuousLinearMap.smul_apply,
     toDistr_smul, fourierMultiplierCLM_toDistr,
     laplacian_eq_fourierMultiplierCLM]
+
+variable (E) in
+private def deltaAux (s : ℝ) (hs : 2 * s < -Module.finrank ℝ E) : Sobolev E ℂ s 2 where
+  toDistr := TemperedDistribution.delta (0 : E)
+  sobFn := 𝓕⁻ (MeasureTheory.Lp.memLp_ofReal_rpow_add_sq_norm (s := -s) (by grind)).toLp
+  bessel_toDistr_eq_sobFn := by
+    simp only [neg_neg]
+    rw [besselPotential, fourierMultiplierCLM_apply]
+    rw [fourier_delta_zero]
+    rw [← Lp.fourierInv_toTemperedDistribution_eq]
+    congr 1
+    rw [(volume : Measure E).smulLeftCLM_toTemperedDistribution (by fun_prop)]
+    ext u
+    simp only [Function.HasTemperateGrowth.toTemperedDistribution_apply, smul_eq_mul,
+      Lp.toTemperedDistribution_apply]
+    apply integral_congr_ae
+    have : MemLp (fun x : E ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2))) 2 := by
+      rw [← neg_neg s]
+      apply MeasureTheory.Lp.memLp_ofReal_rpow_add_sq_norm (E := E) (s := -s) (by grind)
+    filter_upwards [this.coeFn_toLp] with x h
+    simp [h]
+
+variable (E s) in
+@[no_expose]
+def delta : Sobolev E ℂ s 2 :=
+  if hs : 2 * s < -Module.finrank ℝ E then deltaAux E s hs else 0
+
+theorem delta_toDistr (hs : 2 * s < -Module.finrank ℝ E) :
+    (delta E s).toDistr = TemperedDistribution.delta (0 : E) := by
+  simp [delta, hs]
+  rfl
 
 end Sobolev
 

@@ -17,6 +17,12 @@ open scoped Topology
 
 variable {f : 𝓢(E, F)} {g : 𝓢(E, 𝕜)} {c : 𝕜}
 
+variable (f) in
+theorem foo {g : 𝓢(E, 𝕜)} (hg : g 0 = 1) :
+    Filter.Tendsto (fun (r : ℝ) ↦ smulLeftCLM F (g <| r⁻¹ • · ) f) Filter.atTop (𝓝 f) := by
+  -- A complete slop proof is in `BasicAISlop.lean`
+  sorry
+
 variable (𝕜) in
 /-- Composition with a continuous linear equiv on the right is a continuous linear map on
 Schwartz space. -/
