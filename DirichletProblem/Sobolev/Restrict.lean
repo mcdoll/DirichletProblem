@@ -153,6 +153,7 @@ theorem eq_of_restrict {f g : 𝓢'(E, F)} {u : 𝓢(E, ℂ)} (h₁ : f.restrict
   have h_zero : h 0 = 1 := hg'₃
   have h_lim : Filter.Tendsto a Filter.atTop (𝓝 u) := u.foo h_zero
   have ha : ∀ r > 0, f (a r) = g (a r) := by
+    intro r hr
     sorry
   have hf_lim : Filter.Tendsto (f ∘ a) Filter.atTop (𝓝 (f u)) :=
     (f.continuous.tendsto _).comp h_lim

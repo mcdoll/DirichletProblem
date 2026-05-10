@@ -589,7 +589,7 @@ variable (f : 𝓢(E × E', F)) (a : E')
 variable (E F s) in
 /-- The trace operator `H ^ s (E × E') →L[ℂ] H ^ s E`
 
-For `s > -d/2` this is an extension of the trace on Schwartz functions. -/
+For `s > -d / 2` this is an extension of the trace on Schwartz functions. -/
 @[no_expose]
 def restrictFst (a : E') :
     Sobolev (WithLp 2 (E × E')) F s 2 →L[ℂ] Sobolev E F (s - (Module.finrank ℝ E') / 2) 2 :=
@@ -604,25 +604,11 @@ where
 private theorem denseRange_e : DenseRange (restrictFst.e E F s (E' := E')) :=
   SchwartzMap.denseRange_toSobolev _ F s (by simp)
 
-def restrictConst (_s _d : ℝ) : ℝ := 5
-
-theorem restrictConst_nonneg (s d : ℝ) : 0 ≤ restrictConst s d := by
-  sorry
-
-open Qq Mathlib.Meta.Positivity in
-@[positivity restrictConst _ _]
-meta def restrictConst_positivity_ext : PositivityExt where eval {u a} _ _ e := do
-  match u, a, e with
-  | 0, ~q(ℝ), ~q(restrictConst $s $d) =>
-    assertInstancesCommute
-    return .nonnegative q(restrictConst_nonneg $s $d)
-  | _, _, _ => throwError "not Sobolev.restrictConst"
-
 open Module in
 private theorem norm_restrictFst_f_le (a : E') (hs : finrank ℝ E' < 2 * s)
     (f : 𝓢(WithLp 2 (E × E'), F)) :
     ‖(restrictFst.f E F s a) f‖ ≤
-    (restrictConst s (finrank ℝ E)) * ‖(restrictFst.e E F s) f‖ := by
+    (∫ x : E, (1 + ‖x‖ ^ 2) ^ (-s)) * ‖(restrictFst.e E F s) f‖ := by
   let s' := s - (finrank ℝ E') / 2
   apply le_of_sq_le_sq _ (by positivity)
   calc
@@ -647,8 +633,8 @@ private theorem norm_restrictFst_f_le (a : E') (hs : finrank ℝ E' < 2 * s)
       ext x
       rw [SchwartzMap.smulLeftCLM_apply_apply (by fun_prop)]
       simp
-    _ ≤ restrictConst s (finrank ℝ E) ^ 2 *
-        ∫ ξ, ‖(1 + ‖ξ‖ ^ 2) ^ (s / 2) • 𝓕 f ξ‖ ^ 2 := by
+    _ ≤ (∫ x : E, (1 + ‖x‖ ^ 2) ^ (-s)) ^ 2 * ∫ ξ, ‖(1 + ‖ξ‖ ^ 2) ^ (s / 2) • 𝓕 f ξ‖ ^ 2 := by
+
       sorry
     _ = _ := by
       simp only [restrictFst.e, ContinuousLinearMap.coe_coe,
@@ -672,10 +658,10 @@ theorem restrictFst_toSobolev_eq (f : 𝓢(WithLp 2 (E × E'), F)) (hs : Module.
     ((SchwartzMap.precompProdLp ℂ 2).symm f |>.restrictFst ℂ E F a).toSobolev E F
       (s - (Module.finrank ℝ E')/2) 2 := by
   apply LinearMap.extendOfNorm_eq denseRange_e
-  exact ⟨restrictConst s (Module.finrank ℝ E), norm_restrictFst_f_le a hs⟩
+  exact ⟨∫ x : E, (1 + ‖x‖ ^ 2) ^ (-s), norm_restrictFst_f_le a hs⟩
 
 theorem norm_restrictFst_le (a : E') (hs : Module.finrank ℝ E' < 2 * s) :
-    ‖Sobolev.restrictFst E F s a‖ ≤ restrictConst s (Module.finrank ℝ E) :=
+    ‖Sobolev.restrictFst E F s a‖ ≤ ∫ x : E, (1 + ‖x‖ ^ 2) ^ (-s) :=
   LinearMap.opNorm_extendOfNorm_le denseRange_e (by positivity) (norm_restrictFst_f_le a hs)
 
 end Trace
