@@ -61,7 +61,7 @@ theorem toSchwartzMapLM_apply_apply {K : Compacts E}
     (f : ContDiffMapSupportedIn E F ⊤ K) (x : E) :
     f.toSchwartzMapLM 𝕜 F K x = f x := rfl
 
-variable (𝕜) in
+variable (𝕜 F) in
 def toSchwartzMapCLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →L[𝕜] 𝓢(E, F) where
   toLinearMap := toSchwartzMapLM 𝕜 F K
   cont := show Continuous (toSchwartzMapLM 𝕜 F K) by
@@ -77,7 +77,7 @@ def toSchwartzMapCLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →L[�
     by_cases! hx : x ∈ K
     · gcongr
       · exact hC x hx
-      · apply norm_iteratedFDeriv_apply_le_seminorm 𝕜 (by simp)
+      · apply norm_iteratedFDeriv_apply_le_seminorm_top 𝕜
     · -- LHS is zero
       have : iteratedFDeriv ℝ k f x = 0 := by
         apply image_eq_zero_of_notMem_tsupport
@@ -92,21 +92,21 @@ namespace TestFunction
 
 variable [NormedSpace ℝ E] [NormedSpace ℝ F] [NormedSpace 𝕜 F]
 
-variable (𝕜) in
+variable (𝕜 F) in
 def toSchwartzMapCLM (Ω : Opens E) : TestFunction Ω F ⊤ →L[𝕜] 𝓢(E, F) :=
   TestFunction.limitCLM 𝕜 (fun f ↦ f.hasCompactSupport.toSchwartzMap f.contDiff)
-    (fun K _ ↦ ContDiffMapSupportedIn.toSchwartzMapCLM 𝕜 K) (by intros; rfl)
+    (fun K _ ↦ ContDiffMapSupportedIn.toSchwartzMapCLM 𝕜 F K) (by intros; rfl)
 
 @[simp]
 theorem toSchwartzMapCLM_apply {Ω : Opens E} (f : TestFunction Ω F ⊤) (x : E) :
-  f.toSchwartzMapCLM 𝕜 Ω x = f x := rfl
+  f.toSchwartzMapCLM 𝕜 F Ω x = f x := rfl
 
 @[simp]
 theorem coe_toSchwartzMapCLM {Ω : Opens E} (f : TestFunction Ω F ⊤) :
-  (f.toSchwartzMapCLM 𝕜 Ω : E → F) = f := rfl
+  (f.toSchwartzMapCLM 𝕜 F Ω : E → F) = f := rfl
 
 theorem tsupport_toSchwartzMapCLM_subset {Ω : Opens E} (f : TestFunction Ω F ⊤) :
-    tsupport (f.toSchwartzMapCLM 𝕜 Ω) ⊆ Ω :=
+    tsupport (f.toSchwartzMapCLM 𝕜 F Ω) ⊆ Ω :=
   f.tsupport_subset
 
 end TestFunction
@@ -122,7 +122,7 @@ variable [NormedSpace ℂ F]
 Due to the choice of topologies, this map is not continuous. -/
 def restrict (Ω : Opens E) : 𝓢'(E, F) →ₗ[ℂ] 𝓓'(Ω, F) where
   toFun u := {
-    toFun f := u <| f.toSchwartzMapCLM ℂ Ω
+    toFun f := u <| f.toSchwartzMapCLM ℂ ℂ Ω
     map_add' := by simp
     map_smul' := by simp
     cont := by fun_prop }
@@ -133,7 +133,7 @@ variable {Ω : Opens E}
 
 @[simp]
 theorem restrict_apply (u : 𝓢'(E, F)) (f : TestFunction Ω ℂ ⊤) :
-    u.restrict Ω f = u (f.toSchwartzMapCLM ℂ Ω) := rfl
+    u.restrict Ω f = u (f.toSchwartzMapCLM ℂ ℂ Ω) := rfl
 
 open Distribution
 

@@ -1,6 +1,6 @@
 import VersoManual
-import DirichletProblem.Sobolev.Docs
+import DirichletProblem.Documentation
 
 open Verso.Genre Manual
 
-def main := manualMain (%doc DirichletProblem.Sobolev.Docs) (options := ["--output", "html"])
+def main := manualMain (%doc DirichletProblem.Documentation) (options := ["--output", "html"])
