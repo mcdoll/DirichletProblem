@@ -178,7 +178,10 @@ distributions.
 We use `H^s(ℝ^n)` in its unbundled form, because we do not care about the topology and
 to avoid coercions between `H^s` and `𝓢'`. -/
 structure SobolevRestrict [NormedSpace ℂ F] (Ω : Opens E) (s : ℝ) where
+  /-- The underlying distribution -/
   toFun : 𝓓'(Ω, F)
+  /-- A distribution `f` is in `H^s(Ω)` if there exists a tempered distribution `u` in `H^s` such
+  that the restriction of `u` to `Ω` is `f`. -/
   exists_memSobolev : ∃ u : 𝓢'(E, F), toFun = u.restrict Ω ∧ MemSobolev s 2 u
 
 namespace SobolevRestrict

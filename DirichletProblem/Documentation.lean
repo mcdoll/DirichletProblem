@@ -1,5 +1,7 @@
 import VersoManual
-import DirichletProblem.Sobolev.Basic
+import DirichletProblem.Mathlib.Analysis.Distribution.Documentation
+import DirichletProblem.Mathlib.Analysis.InnerProductSpace.Documentation
+import DirichletProblem.Sobolev.Documentation
 
 open Verso.Genre
 open Verso.Genre.Manual
@@ -34,10 +36,6 @@ for a given function $`f`, which is assumed to be at least in $`L^2(Ω)`.
 While this problem looks rather innocent, it involves quite a bit of functional analysis.
 Moreover, we will investigate the spectral theory of the Dirichlet-Laplacian.
 
-test {name}`Sobolev`
-
-```lean
-#check Sobolev
-```
-
-bar
+{include 1 DirichletProblem.Mathlib.Analysis.InnerProductSpace.Documentation}
+{include 1 DirichletProblem.Mathlib.Analysis.Distribution.Documentation}
+{include 1 DirichletProblem.Sobolev.Documentation}

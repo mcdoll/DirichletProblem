@@ -144,8 +144,11 @@ It is defined as the set of all tempered distributions `f` such that
 `𝓕⁻ (1 + ‖x‖ ^ 2) ^ (s / 2) 𝓕 f` can be represented by a `Lp` function `f'`. Both `f` and `f'` are
 stored as data to avoid using `Classical.choose`. -/
 structure Sobolev (s : ℝ) (p : ℝ≥0∞) [hp : Fact (1 ≤ p)] where
+  /-- The underlying tempered distribution -/
   toDistr : 𝓢'(E, F)
+  /-- The underlying `Lp` function -/
   sobFn : Lp F p (volume : Measure E)
+  /-- The Sobolev function is given by applying the Bessel potential operator to the distribution -/
   bessel_toDistr_eq_sobFn : besselPotential E F s toDistr = sobFn
 
 structure Sobolev' (_s : ℝ) (p : ℝ≥0∞) where
