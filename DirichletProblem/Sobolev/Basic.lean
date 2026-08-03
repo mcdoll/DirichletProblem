@@ -151,9 +151,6 @@ structure Sobolev (s : ℝ) (p : ℝ≥0∞) [hp : Fact (1 ≤ p)] where
   /-- The Sobolev function is given by applying the Bessel potential operator to the distribution -/
   bessel_toDistr_eq_sobFn : besselPotential E F s toDistr = sobFn
 
-structure Sobolev' (_s : ℝ) (p : ℝ≥0∞) where
-  sobFn :Lp F p (volume : Measure E)
-
 namespace Sobolev
 
 variable {s s' : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
@@ -181,8 +178,7 @@ theorem ext {f g : Sobolev E F s p} (h₁ : f.toDistr = g.toDistr) : f = g := by
     _ = g.sobFn := g.bessel_toDistr_eq_sobFn
 
 /-- Transfer a Sobolev function in `H^{s,p}` to `H^{s', p}` given that `s = s'`. -/
-def copy (hs : s = s') (f : Sobolev E F s p) :
-    Sobolev E F s' p where
+def copy (hs : s = s') (f : Sobolev E F s p) : Sobolev E F s' p where
   toDistr := f.toDistr
   sobFn := f.sobFn
   bessel_toDistr_eq_sobFn := by
@@ -223,9 +219,8 @@ instance instAdd : Add (Sobolev E F s p) where
   add f g := {
     toDistr := f.toDistr + g.toDistr
     sobFn := f.sobFn + g.sobFn
-    bessel_toDistr_eq_sobFn := by
-      change _ = Lp.toTemperedDistributionCLM F volume p (_ + _)
-      simp [map_add, f.bessel_toDistr_eq_sobFn, g.bessel_toDistr_eq_sobFn] }
+    bessel_toDistr_eq_sobFn := by simp [← Lp.toTemperedDistributionCLM_apply, map_add,
+      f.bessel_toDistr_eq_sobFn, g.bessel_toDistr_eq_sobFn] }
 
 @[simp]
 theorem toDistr_add (f g : Sobolev E F s p) : (f + g).toDistr = f.toDistr + g.toDistr := rfl
@@ -237,9 +232,8 @@ instance instSub : Sub (Sobolev E F s p) where
   sub f g := {
     toDistr := f.toDistr - g.toDistr
     sobFn := f.sobFn - g.sobFn
-    bessel_toDistr_eq_sobFn := by
-      change _ = Lp.toTemperedDistributionCLM F volume p (_ - _)
-      simp [map_sub, f.bessel_toDistr_eq_sobFn, g.bessel_toDistr_eq_sobFn] }
+    bessel_toDistr_eq_sobFn := by simp [← Lp.toTemperedDistributionCLM_apply, map_sub,
+      f.bessel_toDistr_eq_sobFn, g.bessel_toDistr_eq_sobFn] }
 
 @[simp]
 theorem toDistr_sub (f g : Sobolev E F s p) : (f - g).toDistr = f.toDistr - g.toDistr := rfl
@@ -252,8 +246,7 @@ instance instNeg : Neg (Sobolev E F s p) where
     toDistr := -f.toDistr
     sobFn := -f.sobFn
     bessel_toDistr_eq_sobFn := by
-      change _ = Lp.toTemperedDistributionCLM F volume p (- _)
-      simp [map_neg, f.bessel_toDistr_eq_sobFn] }
+      simp [← Lp.toTemperedDistributionCLM_apply, map_neg, f.bessel_toDistr_eq_sobFn] }
 
 @[simp]
 theorem toDistr_neg (f : Sobolev E F s p) : (-f).toDistr = -f.toDistr := rfl
@@ -270,8 +263,7 @@ instance instSMul : SMul R (Sobolev E F s p) where
     toDistr := c • f.toDistr
     sobFn := c • f.sobFn
     bessel_toDistr_eq_sobFn := by
-      change _ = Lp.toTemperedDistributionCLM F volume p _
-      simp [f.bessel_toDistr_eq_sobFn] }
+      simp [← Lp.toTemperedDistributionCLM_apply, f.bessel_toDistr_eq_sobFn] }
 
 @[simp]
 theorem toDistr_smul (c : R) (f : Sobolev E F s p) : (c • f).toDistr = c • f.toDistr := rfl
@@ -413,11 +405,11 @@ variable (E F s p) in
 def toSobolev : 𝓢(E, F) →L[ℂ] Sobolev E F s p :=
   (Sobolev.toLpₗᵢ E F s p).symm.toContinuousLinearEquiv.toContinuousLinearMap ∘L
   toLpCLM ℂ F p (volume : Measure E) ∘L
-  SchwartzMap.fourierMultiplierCLM F (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2) : ℝ))
+  SchwartzMap.fourierMultiplierCLM F (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2)))
 
 theorem toSobolev_apply (f : 𝓢(E, F)) :
   f.toSobolev E F s p = Sobolev.ofLp s ((f.fourierMultiplierCLM F
-    (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2) : ℝ))).toLp p)  := rfl
+    (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2)))).toLp p)  := rfl
 
 @[simp]
 theorem to_Distr_toSobolev (f : 𝓢(E, F)) :
@@ -427,7 +419,7 @@ theorem to_Distr_toSobolev (f : 𝓢(E, F)) :
   simp
 
 theorem norm_toSobolev (f : 𝓢(E, F)) : ‖f.toSobolev E F s p‖ = ‖f.fourierMultiplierCLM F
-    (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2) : ℝ)) |>.toLp p‖ := by
+    (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2))) |>.toLp p‖ := by
   simp [toSobolev_apply, ← Sobolev.norm_sobFn_eq]
 
 variable (E F s) in
@@ -610,8 +602,7 @@ private theorem denseRange_e : DenseRange (restrictFst.e E F s (E' := E')) :=
 open Module in
 private theorem norm_restrictFst_f_le (a : E') (hs : finrank ℝ E' < 2 * s)
     (f : 𝓢(WithLp 2 (E × E'), F)) :
-    ‖(restrictFst.f E F s a) f‖ ≤
-    (∫ x : E, (1 + ‖x‖ ^ 2) ^ (-s)) * ‖(restrictFst.e E F s) f‖ := by
+    ‖(restrictFst.f E F s a) f‖ ≤ (∫ x : E, (1 + ‖x‖ ^ 2) ^ (-s)) * ‖(restrictFst.e E F s) f‖ := by
   let s' := s - (finrank ℝ E') / 2
   apply le_of_sq_le_sq _ (by positivity)
   calc
@@ -720,7 +711,6 @@ theorem mono_apply_eq_zero_of_lt (h : s < s') (f : Sobolev E F s 2) :
 
 open LineDeriv Laplacian Real
 
-set_option backward.isDefEq.respectTransparency false in -- because of real-complex nonsense
 variable (F) in
 def lineDerivOp (s : ℝ) (m : E) : Sobolev E F s 2 →L[ℂ] Sobolev E F (s - 1) 2 :=
   (2 * π * Complex.I) • (fourierMultiplierCLM s (s - 1) ‖m‖ (fun x ↦ Complex.ofReal <| inner ℝ x m)
@@ -752,7 +742,6 @@ theorem lineDerivOp_toDistr (m : E) {s : ℝ} (f : Sobolev E F s 2) :
     toDistr_smul, fourierMultiplierCLM_toDistr,
     lineDeriv_eq_fourierMultiplierCLM]
 
-set_option backward.isDefEq.respectTransparency false in -- because of real-complex nonsense
 variable (E F) in
 def laplacian (s : ℝ) : Sobolev E F s 2 →L[ℂ] Sobolev E F (s - 2) 2 :=
   -(2 * π) ^ 2 • (fourierMultiplierCLM s (s - 2) 1 (fun x ↦ Complex.ofReal <| ‖x‖ ^ 2) ?_ ?_)

@@ -541,6 +541,22 @@ theorem root_.Sobolev.restrictCLM_apply (f : Sobolev E F s 2) :
   simpa [h, Sobolev.restrictCLM_apply_of_mem_orthogonal hf₁, Sobolev.restrictCLM_apply_of_mem hf₂]
     using Sobolev.restrict_eq_zero_of_dsupport hf₂
 
+#check TestFunction.toSchwartzMapCLM ℂ F Ω
+#check SchwartzMap.toSobolev E F s 2
+#check Sobolev.restrictCLM F Ω s
+
+variable (F Ω s) in
+/-- The embedding of test functions into `H^s(Ω)`. -/
+def _root_.TestFunction.toSobolevRestrict : TestFunction Ω F ⊤ →L[ℂ] SobolevRestrict F Ω s :=
+  Sobolev.restrictCLM F Ω s ∘L SchwartzMap.toSobolev E F s 2 ∘L TestFunction.toSchwartzMapCLM ℂ F Ω
+
+@[simp]
+theorem _root_.TestFunction.toSobolevRestrict_apply (f : TestFunction Ω F ⊤)
+    (g : TestFunction Ω ℂ ⊤) :
+    (f.toSobolevRestrict F Ω s).toFun g = ∫ x, g x • f x := by
+  simp [TestFunction.toSobolevRestrict]
+
+
 end InnerProductSpace
 
 end SobolevRestrict
