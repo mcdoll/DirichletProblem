@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Analysis.Fourier.FourierTransform
 
-/-! # Fourier transform -/
+/-! # Inverse Fourier transform on `Lp` -/
 
 @[expose] public noncomputable section
 
@@ -72,9 +72,8 @@ theorem Lp.coe_fourierTransformInv (f : Lp (α := V) E 1) :
 @[simp]
 theorem Lp.fourierTransformInv_toLp {f : V → E} (hf : MemLp f 1) :
     (Lp.fourierTransformInv hf.toLp : V → E) = 𝓕⁻ f := by
-  simp only [Lp.coe_fourierTransformInv]
   ext x
-  exact (Real.fourierInv_congr_ae hf.coeFn_toLp) x
+  simpa using (Real.fourierInv_congr_ae hf.coeFn_toLp) x
 
 variable (V E) in
 /-- The inverse Fourier transform from `L1` functions to bounded continuous functions as a

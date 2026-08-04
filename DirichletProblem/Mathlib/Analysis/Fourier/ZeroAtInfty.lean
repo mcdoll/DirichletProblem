@@ -27,7 +27,7 @@ namespace Real
 variable [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
 
 @[simp]
-theorem toZeroAtInftyCLM_apply (f : 𝓢(V, E)): toZeroAtInftyCLM ℂ V E f = f.toZeroAtInfty := rfl
+theorem toZeroAtInftyCLM_apply (f : 𝓢(V, E)) : toZeroAtInftyCLM ℂ V E f = f.toZeroAtInfty := rfl
 
 variable [CompleteSpace E]
 

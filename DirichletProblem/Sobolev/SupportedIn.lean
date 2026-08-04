@@ -1,7 +1,14 @@
+/-
+Copyright (c) 2025 Moritz Doll. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Moritz Doll
+-/
 module
 
 public import DirichletProblem.Sobolev.Basic
 public import DirichletProblem.Mathlib.Analysis.Distribution.Support
+
+/-! # Sobolev space `H_K^s` -/
 
 @[expose] public noncomputable section
 
