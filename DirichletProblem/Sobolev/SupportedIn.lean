@@ -24,18 +24,18 @@ variable (F s) in
 def SobolevSupportedIn (K : Closeds E) : ClosedSubmodule ℂ (Sobolev E F s 2) where
   carrier := { f | dsupport f.toDistr ⊆ K }
   add_mem' {f g} hf hg := by
-    simp only [Set.mem_setOf_eq, Sobolev.toDistr_add]
+    simp only [Set.mem_ofPred_eq, Sobolev.toDistr_add]
     grw [TemperedDistribution.dsupport_add]
     grind
   zero_mem' := by simp
   smul_mem' c {f} hf := by
-    simp only [Set.mem_setOf_eq, Sobolev.toDistr_smul]
+    simp only [Set.mem_ofPred_eq, Sobolev.toDistr_smul]
     grw [TemperedDistribution.dsupport_smul]
     exact hf
   isClosed' := by
     refine IsSeqClosed.isClosed ?_
     intro a f ha haf
-    simp only [Set.mem_setOf_eq] at ha ⊢
+    simp only [Set.mem_ofPred_eq] at ha ⊢
     intro x hx
     rw [mem_dsupport_iff_forall_exists_ne] at hx
     by_contra h

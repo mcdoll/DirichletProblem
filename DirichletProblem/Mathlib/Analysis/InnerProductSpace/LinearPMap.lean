@@ -1,7 +1,13 @@
+/-
+Copyright (c) 2026 Moritz Doll. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Moritz Doll
+-/
 module
 
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 
+/-! # Symmetric and self-adjoint operators -/
 
 @[expose] public noncomputable section
 
@@ -150,7 +156,7 @@ theorem bar' {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric) (h₁ : T.IsClosed) {
         obtain ⟨b, hb, h, hb'⟩ := cauchySeq_iff_le_tendsto_0.mp h_lim.cauchySeq
         refine cauchySeq_iff_le_tendsto_0.mpr ?_
         have hb_lim : Filter.Tendsto (‖c‖⁻¹ • b) Filter.atTop (nhds 0) := by
-          simpa using hb'.const_smul ‖c‖⁻¹
+          simpa using! hb'.const_smul ‖c‖⁻¹
         use ‖c‖⁻¹ • b, ?_, ?_, hb_lim
         · intro n
           specialize hb n
@@ -304,6 +310,7 @@ theorem ker_adjoint_eq_bot_iff {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain :
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff]
   rw [Submodule.eq_bot_iff]
   simp only [Subtype.forall, Submodule.mk_eq_zero]
+  congrm (∀ x, ?_)
   grind [mem_adjoint_domain_of_mem_range_orthogonal, mem_range_orthogonal_iff']
 
 theorem foo'' {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : Set E')) (c : ℝ) :
@@ -326,7 +333,7 @@ theorem foo {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : Set E')) :
 theorem foo' {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : Set E')) :
     (-(I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T†).ker = ⊥ ↔
     Dense (LinearMap.range ((I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T).toFun : Set E') := by
-  convert foo'' hT' (-1) using 4
+  convert! foo'' hT' (-1) using 4
   · simp
   · simp
 
@@ -351,11 +358,11 @@ theorem isSelfAdjoint_tfae {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
     · --apply?
       rwa [foo' hT', Submodule.dense_iff_topologicalClosure_eq_top,
         IsClosed.submodule_topologicalClosure_eq] at h₃
-      convert bar' hT h₁ (c := 1) (by simp) using 4
+      convert! bar' hT h₁ (c := 1) (by simp) using 4
       simp
     · rwa [foo hT', Submodule.dense_iff_topologicalClosure_eq_top,
         IsClosed.submodule_topologicalClosure_eq] at h₂
-      convert bar' hT h₁ (c := -1) (by simp) using 4
+      convert! bar' hT h₁ (c := -1) (by simp) using 4
       simp
   tfae_have 3 → 1 := by
     intro ⟨h₁, h₂⟩

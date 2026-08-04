@@ -7,6 +7,8 @@ module
 
 public import Mathlib.Analysis.Fourier.FourierTransform
 
+/-! # Fourier transform -/
+
 @[expose] public noncomputable section
 
 variable {V W E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]

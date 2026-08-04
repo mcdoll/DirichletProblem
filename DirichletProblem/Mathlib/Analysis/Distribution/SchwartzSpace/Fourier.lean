@@ -8,6 +8,10 @@ module
 public import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 public import DirichletProblem.Mathlib.Analysis.Fourier.FourierTransform
 
+/-! # Fourier transform of Schwartz functions
+
+-/
+
 @[expose] public noncomputable section
 
 open Real MeasureTheory MeasureTheory.Measure

@@ -1,9 +1,15 @@
+/-
+Copyright (c) 2026 Moritz Doll. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Moritz Doll
+-/
 module
 
 public import Mathlib.Analysis.LocallyConvex.WithSeminorms
 public import Mathlib.Analysis.Normed.Operator.Extend
 public import Mathlib.Algebra.Order.AddTorsor
 
+/-! # Extension of linear maps -/
 
 @[expose] public noncomputable section
 
@@ -54,7 +60,7 @@ theorem isBoundedBy_iff_forall (p q : Seminorm 𝕜₁ E₁) :
     rw [Seminorm.le_def]
     intro x
     grw [h x]
-    suffices C • q x ≤ (C.toNNReal : ℝ) • q x by simpa using this
+    suffices C • q x ≤ (C.toNNReal : ℝ) • q x by simpa using! this
     gcongr
     simp
 
@@ -302,10 +308,7 @@ theorem ker_le_ker_of_isBounded [T1Space F] (hq : WithSeminorms q)
   obtain ⟨s, C, hC⟩ := h i
   rw [Seminorm.le_def] at hC
   apply le_antisymm _ (by positivity)
-  convert hC x
-  symm
-  simp only [Seminorm.smul_apply, smul_eq_zero]
-  right
+  convert! hC x
   simp [← SeminormFamily.finset_sup_comp, hx]
 
 variable [TopologicalSpace Eₗ]
@@ -326,9 +329,7 @@ where finally
       obtain ⟨s, C, hC⟩ := h i
       use s, C
       intro ⟨y, x, hxy⟩
-      specialize hC x
-      simp only [← SeminormFamily.finset_sup_comp, Seminorm.comp_apply, Seminorm.smul_apply] at hC
-      simpa [← SeminormFamily.finset_sup_comp, ← hxy]
+      simpa [← SeminormFamily.finset_sup_comp, ← hxy] using! hC x
 
 theorem compLeftInverse_apply_of_bdd' [T2Space F] (hp : WithSeminorms p) (hq : WithSeminorms q)
     (h : Seminorm.IsBounded (p.comp g) q f)

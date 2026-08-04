@@ -9,6 +9,8 @@ public import DirichletProblem.Mathlib.Analysis.Fourier.FourierTransform
 public import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 public import Mathlib.Analysis.Normed.Operator.Extend
 
+/-! # Fourier transform of `L1` -/
+
 @[expose] public noncomputable section
 
 section FourierTransform
@@ -23,6 +25,9 @@ open scoped ZeroAtInfty Filter Topology BoundedContinuousFunction
 namespace Real
 
 variable [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
+
+@[simp]
+theorem toZeroAtInftyCLM_apply (f : 𝓢(V, E)): toZeroAtInftyCLM ℂ V E f = f.toZeroAtInfty := rfl
 
 variable [CompleteSpace E]
 
@@ -54,7 +59,7 @@ theorem Lp.fourierTransformZeroAtInftyCLM_toBCF (f : Lp (α := V) E 1) :
     (isClosed_eq (by fun_prop) (Real.Lp.fourierTransformCLM V E).cont)
   intro f
   ext x
-  simpa using Real.fourier_congr_ae (coeFn_toLp f 1 volume).symm x
+  simpa [fourier_coe] using Real.fourier_congr_ae (coeFn_toLp f 1 volume).symm x
 
 theorem Lp.fourierTransformZeroAtInftyCLM_apply_apply (f : Lp (α := V) E 1) (x : V) :
     Lp.fourierTransformZeroAtInftyCLM V E f x = 𝓕 (f : V → E) x := by

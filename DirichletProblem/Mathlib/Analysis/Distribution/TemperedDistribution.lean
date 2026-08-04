@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Moritz Doll. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Moritz Doll
+-/
 module
 
 public import Mathlib.Analysis.Distribution.TemperedDistribution
@@ -5,6 +10,8 @@ public import DirichletProblem.Mathlib.Analysis.Asymptotics.Lemmas
 public import DirichletProblem.Mathlib.Analysis.Fourier.FourierTransform
 public import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 public import DirichletProblem.Mathlib.MeasureTheory.Function.LpSpace.ContinuousFunctions
+
+/-! # Tempered distributions -/
 
 @[expose] public noncomputable section
 
@@ -68,11 +75,11 @@ def toTemperedDistribution {f : E → F} {k : ℕ} (hf : LocallyIntegrable f μ)
     SchwartzMap.mkCLMtoNormedSpace (fun g ↦ ∫ x, g x • f x ∂μ) ?_ ?_ ?_
 where finally
   · intro g₁ g₂
-    simp only [SchwartzMap.add_apply, add_smul]
+    simp only [_root_.add_apply, add_smul]
     apply integral_add (hf.integrable_schwartzMap_smul hf' g₁)
       (hf.integrable_schwartzMap_smul hf' g₂)
   · intro c g
-    simp only [SchwartzMap.smul_apply, smul_assoc, RingHom.id_apply]
+    simp only [_root_.smul_apply, smul_assoc, RingHom.id_apply]
     apply integral_smul
   · obtain ⟨c, _hc, s, hs₁, hs₂⟩ := isBigO_cocompact_iff.mp hf'
     simp only [Set.mem_compl_iff, norm_pow, norm_norm] at hs₂
@@ -243,7 +250,7 @@ def toTemperedDistributionCLM : (E →ᵇ F) →L[ℂ] 𝓢'(E, F) where
     simp only [toTemperedDistribution_apply]
     convert ((lsmul ℂ ℂ).lpPairing μ 1 ⊤ (g.toLp 1 μ) ∘L
       (BoundedContinuousFunction.toLp_top (E := F) ℂ μ)).cont with f
-    simp only [coe_comp, AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearMap.coe_comp, coe_coe,
+    simp only [coe_comp, AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, coe_coe,
       Function.comp_apply, toLp_top_apply, lpPairing_eq_integral, lsmul_apply]
     apply integral_congr_ae
     filter_upwards [g.coeFn_toLp 1 μ, f.memLp_top.coeFn_toLp] with x hg hf

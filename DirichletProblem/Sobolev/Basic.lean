@@ -11,6 +11,8 @@ public import DirichletProblem.Mathlib.Analysis.Fourier.ZeroAtInfty
 public import DirichletProblem.Mathlib.Analysis.Distribution.TemperedDistribution
 public import Mathlib.Analysis.Fourier.LpSpace
 
+/-! # Sobolev spaces -/
+
 @[expose] public noncomputable section
 
 variable {E F : Type*}
@@ -412,7 +414,7 @@ theorem toSobolev_apply (f : 𝓢(E, F)) :
     (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2)))).toLp p)  := rfl
 
 @[simp]
-theorem to_Distr_toSobolev (f : 𝓢(E, F)) :
+theorem toDistr_toSobolev (f : 𝓢(E, F)) :
     (f.toSobolev E F s p).toDistr = f := by
   rw [toSobolev_apply, Sobolev.toDistr_ofLp, Lp.toTemperedDistribution_toLp_eq,
     ← fourierMultiplierCLM_toTemperedDistributionCLM_eq (by fun_prop), ← besselPotential]
@@ -425,7 +427,7 @@ theorem norm_toSobolev (f : 𝓢(E, F)) : ‖f.toSobolev E F s p‖ = ‖f.fouri
 variable (E F s) in
 theorem denseRange_toSobolev (hp : p ≠ ⊤) : DenseRange (toSobolev E F s p) := by
   simp only [toSobolev, LinearIsometryEquiv.toContinuousLinearEquiv_symm,
-    ContinuousLinearMap.coe_comp', ContinuousLinearEquiv.coe_coe,
+    ContinuousLinearMap.coe_comp, ContinuousLinearEquiv.coe_coe,
     LinearIsometryEquiv.coe_symm_toContinuousLinearEquiv]
   apply (Sobolev.toLpₗᵢ E F s p).symm.surjective.denseRange.comp _ (by fun_prop)
   apply (denseRange_toLpCLM hp).comp _ (by fun_prop)
@@ -610,7 +612,7 @@ private theorem norm_restrictFst_f_le (a : E') (hs : finrank ℝ E' < 2 * s)
         ‖((SchwartzMap.smulLeftCLM F fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s' / 2)))
                 (𝓕 ((SchwartzMap.restrictFst ℂ E F a) ((SchwartzMap.precompProdLp ℂ 2).symm f))))
               x‖ ^ 2 := by
-      simp only [restrictFst.f, ContinuousLinearMap.coe_comp, LinearMap.coe_comp,
+      simp only [restrictFst.f, ContinuousLinearMap.coe_comp,
         ContinuousLinearMap.coe_coe, ContinuousLinearEquiv.coe_coe, Function.comp_apply,
         SchwartzMap.norm_toSobolev_eq_smulLeftCLM_fourier, ne_eq, OfNat.ofNat_ne_zero,
         not_false_eq_true, ofNat_ne_top, SchwartzMap.norm_toLp', toReal_ofNat, Real.rpow_ofNat]
@@ -738,7 +740,7 @@ theorem lineDerivOp_apply (m : E) (f : Sobolev E F s 2) : f.lineDerivOp F s m = 
 @[simp]
 theorem lineDerivOp_toDistr (m : E) {s : ℝ} (f : Sobolev E F s 2) :
     (∂_{m} f).toDistr = ∂_{m} f.toDistr := by
-  rw [← lineDerivOp_apply, lineDerivOp, ContinuousLinearMap.smul_apply,
+  rw [← lineDerivOp_apply, lineDerivOp, smul_apply,
     toDistr_smul, fourierMultiplierCLM_toDistr,
     lineDeriv_eq_fourierMultiplierCLM]
 
@@ -758,7 +760,7 @@ theorem laplacian_apply (f : Sobolev E F s 2) : f.laplacian E F s = Δ f := rfl
 set_option backward.isDefEq.respectTransparency false in -- because of real-complex nonsense
 @[simp]
 theorem laplacian_toDistr {s : ℝ} (f : Sobolev E F s 2) : (Δ f).toDistr = Δ f.toDistr := by
-  rw [← laplacian_apply, laplacian, ContinuousLinearMap.smul_apply,
+  rw [← laplacian_apply, laplacian, smul_apply,
     toDistr_smul, fourierMultiplierCLM_toDistr,
     laplacian_eq_fourierMultiplierCLM]
 

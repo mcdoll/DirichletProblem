@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Moritz Doll. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Moritz Doll
+-/
 module
 
 public import Mathlib.Analysis.Distribution.Distribution
@@ -69,9 +74,9 @@ def toSchwartzMapCLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →L[�
       (schwartz_withSeminorms 𝕜 E F) _
     rintro ⟨n, k⟩
     obtain ⟨C, hC_pos, hC⟩ := exists_norm_pow_le K n
-    use {k}, ⟨C, hC_pos⟩, fun f ↦ ?_
+    use {k}, NNReal.mk C hC_pos, fun f ↦ ?_
     simp only [SchwartzMap.schwartzSeminormFamily_apply, Seminorm.comp_apply,
-      Finset.sup_singleton, Seminorm.smul_apply, NNReal.smul_def, smul_eq_mul]
+      Finset.sup_singleton, _root_.smul_apply, NNReal.smul_def, smul_eq_mul]
     apply SchwartzMap.seminorm_le_bound 𝕜 n k _ (by positivity)
     intro x
     by_cases! hx : x ∈ K
@@ -411,9 +416,10 @@ def _root_.Sobolev.supportedIn_toSobolevRestrict :
   toFun f := f.1.restrict Ω
   map_add' f g := by
     ext1
-    simp
+    norm_cast
+    --simp
     -- some lemma is missing here: (norm_cast closes the goal)
-    rfl
+    --rfl
   map_smul' c f := by
     ext1
     simp
@@ -457,8 +463,8 @@ theorem toSobolevₗ_apply (f : SobolevRestrict F Ω s) : f.toSobolevₗ F Ω s 
 
 variable (F Ω s) in
 theorem injective_toSobolevₗ : Function.Injective (toSobolevₗ F Ω s) := by
-  simpa [toSobolevₗ] using
-    EmbeddingLike.injective (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm
+  intro x y h
+  simpa using toSobolev_injective h
 
 instance instNormedAddCommGroup :
     NormedAddCommGroup (SobolevRestrict F Ω s) :=
@@ -466,7 +472,7 @@ instance instNormedAddCommGroup :
     (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm.toLinearMap
     (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm.injective
 
-theorem foo (y : SobolevRestrict F Ω s) :
+theorem norm_supportedIn_toSobolevRestrict_symm (y : SobolevRestrict F Ω s) :
     ‖(Sobolev.supportedIn_toSobolevRestrict F Ω s).symm y‖ = ‖y‖ := rfl
 
 theorem norm_toSobolev (y : SobolevRestrict F Ω s) :
@@ -493,7 +499,7 @@ def _root_.Sobolev.toSobolevRestrict :
   norm_map' x := calc
     _ = ‖(Sobolev.supportedIn_toSobolevRestrict F Ω s).symm <|
         (Sobolev.supportedIn_toSobolevRestrict F Ω s) x‖ := by
-      rw [foo]
+      rw [norm_supportedIn_toSobolevRestrict_symm]
     _ = ‖x‖ := by
       congr
       exact (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm_apply_apply x
@@ -511,13 +517,13 @@ theorem _root_.Sobolev.toSobolevRestrict_symm_apply
 variable (F Ω s) in
 def _root_.Sobolev.restrictCLM : Sobolev E F s 2 →L[ℂ] SobolevRestrict F Ω s :=
   (Sobolev.toSobolevRestrict F Ω s).toContinuousLinearEquiv.toContinuousLinearMap ∘L
-    (SobolevSupportedIn F s Ω.compl)ᗮ.orthogonalProjection
+    (SobolevSupportedIn F s Ω.compl)ᗮ.orthogonalProjectionOnto
 
 set_option backward.isDefEq.respectTransparency false in
 -- defeq abuse in coercions between closed submodules and orthogonality
 theorem root_.Sobolev.restrictCLM_apply_of_mem {f : Sobolev E F s 2}
     (hf : f ∈ SobolevSupportedIn F s Ω.compl) : f.restrictCLM F Ω s = 0 := by
-  have := Submodule.orthogonalProjection_eq_zero_iff
+  have := Submodule.orthogonalProjectionOnto_eq_zero_iff
     (K := (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule) (v := f)
   simp only [ClosedSubmodule.toSubmodule_orthogonal_eq, Submodule.orthogonal_orthogonal] at this
   simp [Sobolev.restrictCLM, this.mpr hf]
@@ -526,7 +532,7 @@ set_option backward.isDefEq.respectTransparency false in
 -- defeq abuse in coercions between closed submodules and orthogonality
 theorem root_.Sobolev.restrictCLM_apply_of_mem_orthogonal {f : Sobolev E F s 2}
     (hf : f ∈ (SobolevSupportedIn F s Ω.compl)ᗮ) : f.restrictCLM F Ω s = f.restrict Ω := by
-  have := Submodule.orthogonalProjection_mem_subspace_eq_self ⟨f, hf⟩
+  have := Submodule.orthogonalProjectionOnto_mem_subspace_eq_self ⟨f, hf⟩
   simp only [ClosedSubmodule.toSubmodule_orthogonal_eq] at this
   simp [Sobolev.restrictCLM, this]
   rfl
@@ -540,10 +546,6 @@ theorem root_.Sobolev.restrictCLM_apply (f : Sobolev E F s 2) :
   simp only [Submodule.orthogonal_orthogonal] at hf₂
   simpa [h, Sobolev.restrictCLM_apply_of_mem_orthogonal hf₁, Sobolev.restrictCLM_apply_of_mem hf₂]
     using Sobolev.restrict_eq_zero_of_dsupport hf₂
-
-#check TestFunction.toSchwartzMapCLM ℂ F Ω
-#check SchwartzMap.toSobolev E F s 2
-#check Sobolev.restrictCLM F Ω s
 
 variable (F Ω s) in
 /-- The embedding of test functions into `H^s(Ω)`. -/

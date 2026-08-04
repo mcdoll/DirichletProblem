@@ -1,7 +1,16 @@
+/-
+Copyright (c) 2026 Moritz Doll. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Moritz Doll
+-/
 module
 
 public import Mathlib.Analysis.Distribution.SchwartzSpace.Basic
---public import Mathlib.Analysis.Normed.Lp.ProdLp
+
+/-! # Schwartz functions
+
+additional definitions and theorem to be upstreamed to mathlib
+-/
 
 @[expose] public noncomputable section
 
@@ -48,7 +57,6 @@ variable {p : ℝ≥0∞} [Fact (1 ≤ p)]
 variable (𝕜 p) in
 def precompProdLp : 𝓢(E × E', F) ≃L[𝕜] 𝓢(WithLp p (E × E'), F) :=
   compCLEOfContinuousLinearEquiv 𝕜 (WithLp.prodContinuousLinearEquiv p ℝ E E')
-  --sorry
 
 @[simp]
 theorem precompProdLp_apply (f : 𝓢(E × E', F)) (x : WithLp p (E × E')) :
