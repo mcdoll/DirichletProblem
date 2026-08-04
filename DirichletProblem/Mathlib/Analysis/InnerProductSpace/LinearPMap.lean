@@ -47,9 +47,6 @@ def IsEssentiallySelfAdjoint (T : E →ₗ.[𝕜] E) : Prop :=
 
 variable {T S : E →ₗ.[𝕜] E}
 
-theorem toFun_range : T.toFun.range = T.graph.map (LinearMap.snd 𝕜 E E) := by
-  ext; simp
-
 /- todo: move this-/
 theorem IsClosed.closure_eq (hT : T.IsClosed) : T.closure = T := by
   apply eq_of_eq_graph
@@ -126,7 +123,7 @@ theorem IsEssentiallySelfAdjoint.existsUnique_isSelfAdjoint (hT : T.IsEssentiall
   apply existsUnique_of_exists_of_unique
   · exact ⟨T.closure, hT, le_closure T⟩
   · intro S₁ S₂ ⟨hS₁, hTS₁⟩ ⟨hS₂, hTS₂⟩
-    -- S₁ = S₁† ≤ T† ≤ T ≤ S₂
+    -- S₁ = S₁† ≤ T† ≤ T†† ≤ S₂†† = S₂
     sorry
 
 open Complex
@@ -232,7 +229,7 @@ theorem IsSymmetric.ker_const_smul_im_eq_bot {T : E' →ₗ.[ℂ] E'} (hT : IsSy
   have : inner ℂ x x = 0 := by
     rw [← neg_eq_self]
     exact (mul_left_cancel₀ (by simp [hc]) this).symm
-  exact inner_self_eq_zero.mp this
+  grind [inner_self_eq_zero]
 
 omit [CompleteSpace E'] in
 @[simp]
@@ -249,14 +246,9 @@ theorem adjoint_id_vadd {T : E' →ₗ.[ℂ] E'} (hT : Dense (T.domain : Set E')
     simp_rw [LinearMap.coe_add]
     simp only [vadd_domain, LinearMap.coe_comp, coe_innerₛₗ_apply, LinearMap.coe_smul,
       LinearMap.id_coe, Submodule.coe_subtype, mem_adjoint_domain_iff]
-    have : Continuous (c • (id : E' → E')) := by
-      apply continuous_id.const_smul
     constructor
     · intro h
       have h' : Continuous (-(inner ℂ x ·) ∘ (c • id) ∘ (Subtype.val : T.domain → E')) := by
-        apply Continuous.comp
-        · apply Continuous.neg
-          fun_prop
         fun_prop
       convert h'.add h
       simp
@@ -377,8 +369,7 @@ theorem isSelfAdjoint_tfae {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
     have hy₁ : y ∈ T†.domain := (hT.le_adjoint hT').1 hy
     -- The crucial step is that `T† - i` is injective
     have h_ker : (-Complex.I • LinearMap.id (R := ℂ) (M := E') +ᵥ T†).ker = ⊥ := by
-      rw [neg_smul]
-      rw [foo' hT', h₁]
+      rw [neg_smul, foo' hT', h₁]
       simp
     have hy' : (-Complex.I • LinearMap.id (R := ℂ) (M := E') +ᵥ T†) ⟨y, by simp [hy₁]⟩ =
         (-Complex.I • LinearMap.id (R := ℂ) (M := E') +ᵥ T†) ⟨x, hx⟩ := by
