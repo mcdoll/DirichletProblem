@@ -5,7 +5,6 @@ Authors: Moritz Doll
 -/
 module
 
-public import DirichletProblem.Mathlib.Analysis.Fourier.FourierTransform
 public import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 public import Mathlib.Analysis.Normed.Operator.Extend
 

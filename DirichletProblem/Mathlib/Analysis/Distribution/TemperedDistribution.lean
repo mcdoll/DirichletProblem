@@ -7,7 +7,6 @@ module
 
 public import Mathlib.Analysis.Distribution.TemperedDistribution
 public import DirichletProblem.Mathlib.Analysis.Asymptotics.Lemmas
-public import DirichletProblem.Mathlib.Analysis.Fourier.FourierTransform
 public import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 public import DirichletProblem.Mathlib.MeasureTheory.Function.LpSpace.ContinuousFunctions
 
@@ -67,8 +66,6 @@ theorem integrable_schwartzMap_smul {f : E → F} {k : ℕ} (hf : LocallyIntegra
   rw [← MeasureTheory.integrableOn_univ, ← Set.union_compl_self s]
   exact h₂.union h₁
 
---set_option backward.isDefEq.respectTransparency false in
---set_option backward.privateInPublic true in
 def toTemperedDistribution {f : E → F} {k : ℕ} (hf : LocallyIntegrable f μ)
     (hf' : f =O[Filter.cocompact E] (‖·‖ ^ k)) : 𝓢'(E, F) :=
   toPointwiseConvergenceCLM _ _ _ _ <|

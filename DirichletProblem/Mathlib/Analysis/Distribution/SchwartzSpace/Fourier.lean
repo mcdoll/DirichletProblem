@@ -6,7 +6,8 @@ Authors: Sébastien Gouëzel, Moritz Doll
 module
 
 public import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
-public import DirichletProblem.Mathlib.Analysis.Fourier.FourierTransform
+public import Mathlib.Analysis.Fourier.FourierTransform
+
 
 /-! # Fourier transform of Schwartz functions
 

@@ -4,7 +4,6 @@ import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 import DirichletProblem.Mathlib.Analysis.Distribution.Sobolev
 import DirichletProblem.Mathlib.Analysis.Distribution.Support
 import DirichletProblem.Mathlib.Analysis.Distribution.TemperedDistribution
-import DirichletProblem.Mathlib.Analysis.Fourier.FourierTransform
 import DirichletProblem.Mathlib.Analysis.Fourier.ZeroAtInfty
 import DirichletProblem.Mathlib.Analysis.InnerProductSpace.LinearPMap
 import DirichletProblem.Mathlib.MeasureTheory.Function.Holder

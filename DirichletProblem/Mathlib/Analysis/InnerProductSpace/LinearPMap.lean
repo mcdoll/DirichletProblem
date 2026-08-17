@@ -22,10 +22,6 @@ section LinearMap
 variable [AddCommGroup E] [Module 𝕜 E]
 variable [AddCommGroup F] [Module 𝕜 F]
 
-@[simp]
-theorem LinearMap.coe_add {T₁ T₂ : E →ₗ[𝕜] F} : (↑(T₁ + T₂) : E → F) = T₁ + T₂ := rfl
-
-
 end LinearMap
 
 
