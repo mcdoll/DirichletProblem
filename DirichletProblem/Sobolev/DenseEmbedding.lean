@@ -289,7 +289,6 @@ section compInv
 
 variable [NormedField 𝕜] [NormedField 𝕜₂] {σ₁₂ : 𝕜 →+* 𝕜₂} [RingHomIsometric σ₁₂]
   [AddCommGroup E] [AddCommGroup F] [AddCommGroup Eₗ]
-  [TopologicalSpace F]
   [Module 𝕜 E] [Module 𝕜₂ F] [Module 𝕜 Eₗ]
 
 variable {p : SeminormFamily 𝕜 Eₗ ι} {q : SeminormFamily 𝕜₂ F ι'}
@@ -297,12 +296,12 @@ variable (f : E →ₛₗ[σ₁₂] F) (g : E →ₗ[𝕜] Eₗ)
 
 variable (i : ι) (i' : ι')
 
-theorem ker_le_ker_of_isBounded [T1Space F] (hq : WithSeminorms q)
-    (h : Seminorm.IsBounded (p.comp g) q f) :
+theorem ker_le_ker_of_isBoundedBy_comp_comp (hq : ∀ x, x ≠ 0 → ∃ i, q i x ≠ 0)
+    (h : (q.comp f).IsBoundedBy (p.comp g)) :
     g.ker ≤ f.ker := by
   intro x (hx : g x = 0)
   suffices ∀ (i : ι'), (q i) (f x) = 0 by
-    have foo := hq.separating_of_T1 (f x)
+    specialize hq (f x)
     simp; grind
   intro i
   obtain ⟨s, C, hC⟩ := h i
@@ -311,18 +310,18 @@ theorem ker_le_ker_of_isBounded [T1Space F] (hq : WithSeminorms q)
   convert! hC x
   simp [← SeminormFamily.finset_sup_comp, hx]
 
-variable [TopologicalSpace Eₗ]
+variable [TopologicalSpace Eₗ] [TopologicalSpace F]
 
 open scoped Classical in
 /-- Composition of a semilinear map `f` with the left inverse of a linear map `g` as a continuous
 linear map provided that the norm estimate `‖f x‖ ≤ C * ‖g x‖` holds for all `x : E`. -/
 def compLeftInverse' [T2Space F] (hp : WithSeminorms p) (hq : WithSeminorms q) :
     g.range →SL[σ₁₂] F :=
-  if h : Seminorm.IsBounded (p.comp g) q f then
+  if h : (q.comp f).IsBoundedBy (p.comp g) then
   ⟨((g.ker.liftQ f ?_).comp g.quotKerEquivRange.symm.toLinearMap), ?_⟩
   else 0
 where finally
-  · exact ker_le_ker_of_isBounded f g hq h
+  · exact ker_le_ker_of_isBoundedBy_comp_comp f g hq.separating_of_T1 h
   · refine WithSeminorms.continuous_of_isBounded (p := p.comp g.range.subtype) ?_ hq _ ?_
     · apply LinearMap.withSeminorms_induced hp
     · intro i
@@ -332,7 +331,7 @@ where finally
       simpa [← SeminormFamily.finset_sup_comp, ← hxy] using! hC x
 
 theorem compLeftInverse_apply_of_bdd' [T2Space F] (hp : WithSeminorms p) (hq : WithSeminorms q)
-    (h : Seminorm.IsBounded (p.comp g) q f)
+    (h : (q.comp f).IsBoundedBy (p.comp g))
     (x : E) (y : Eₗ) (hx : g x = y) :
     f.compLeftInverse' g hp hq ⟨y, ⟨x, hx⟩⟩ = f x := by
   simp [compLeftInverse', h, ← hx]
