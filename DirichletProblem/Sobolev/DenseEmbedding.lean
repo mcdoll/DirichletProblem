@@ -201,6 +201,7 @@ structure WithSeminormsEmbedding (f : E₁ →ₛₗ[σ₁₂] E₂) (p : Semino
 
 variable {f : E₁ →ₛₗ[σ₁₂] E₂} {p : SeminormFamily 𝕜₁ E₁ ι} {q : SeminormFamily 𝕜₂ E₂ ι'}
 
+omit [TopologicalSpace E₁] [TopologicalSpace E₂] in
 theorem isWithSeminormsMap_def : IsWithSeminormsMap f p q ↔
       ∀ i, ∃ (s : Finset ι') (C : ℝ≥0), ∀ x, p i x ≤ C • (s.sup q) (f x) := by
   unfold IsWithSeminormsMap Seminorm.IsBounded
@@ -363,3 +364,5 @@ def extendOfNorm' [T2Space F] (hp : WithSeminorms p) (hq : WithSeminorms q) :
     Eₗ →SL[σ₁₂] F := (f.compLeftInverse' e hp hq).extend e.range.subtypeL
 
 end Extend
+
+end LinearMap

@@ -37,7 +37,3 @@ instance ClosedSubmodule.innerProductSpace (W : ClosedSubmodule ℂ F) : InnerPr
 
 variable (F Ω s) in
 abbrev SobolevRestrictZero := (TestFunction.toSobolevRestrict F Ω s).range.closure
-
-#synth InnerProductSpace ℂ (SobolevRestrictZero F Ω s)
-
-#check (TestFunction.toSobolevRestrict F Ω s).range.closure

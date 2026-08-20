@@ -25,7 +25,7 @@ variable [AddCommGroup F] [Module 𝕜 F]
 end LinearMap
 
 
-variable [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
+variable [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 variable [NormedAddCommGroup E'] [InnerProductSpace ℂ E'] [CompleteSpace E']
 variable [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
@@ -38,7 +38,7 @@ def IsSymmetric (T : E →ₗ.[𝕜] E) : Prop :=
   T.IsFormalAdjoint T
 
 /-- A linear map is essentially self-adjoint if its closure is self-adjoint. -/
-def IsEssentiallySelfAdjoint (T : E →ₗ.[𝕜] E) : Prop :=
+def IsEssentiallySelfAdjoint [CompleteSpace E] (T : E →ₗ.[𝕜] E) : Prop :=
   IsSelfAdjoint (T.closure)
 
 variable {T S : E →ₗ.[𝕜] E}
@@ -48,20 +48,20 @@ theorem IsClosed.closure_eq (hT : T.IsClosed) : T.closure = T := by
   apply eq_of_eq_graph
   rw [← hT.isClosable.graph_closure_eq_closure_graph, hT.submodule_topologicalClosure_eq]
 
-theorem mem_range_iff' {f : E →ₗ.[𝕜] E} {y : E} : y ∈ f.toFun.range ↔ ∃ x : E, (x, y) ∈ f.graph := by
+theorem mem_range_iff' {f : E →ₗ.[𝕜] E} {y : E} :
+    y ∈ f.toFun.range ↔ ∃ x : E, (x, y) ∈ f.graph := by
   exact LinearPMap.mem_range_iff
 
 theorem IsClosed.vadd {f : E →ₗ.[𝕜] E} (hf : f.IsClosed) (g : E →ₗ[𝕜] E) : (g +ᵥ f).IsClosed := by
   rw [IsClosed] at hf ⊢
-
   sorry
 
-theorem IsClosable.closure_adjoint (hT : T.IsClosable) (hT' : Dense (T.domain : Set E)) :
+theorem IsClosable.closure_adjoint [CompleteSpace E] (hT : T.IsClosable)
+    (hT' : Dense (T.domain : Set E)) :
     T.closure† = T† := by
   apply eq_of_eq_graph
   rw [adjoint_graph_eq_graph_adjoint sorry, adjoint_graph_eq_graph_adjoint hT',
     ← hT.graph_closure_eq_closure_graph]
-
   sorry
 
 
@@ -71,6 +71,8 @@ theorem IsSymmetric.of_le (hT : T.IsSymmetric) (h : S ≤ T) : S.IsSymmetric := 
   obtain ⟨y', hy, hy'⟩ := exists_of_le h y
   rw [hx, hx', hy, hy']
   apply hT x' y'
+
+variable [CompleteSpace E]
 
 theorem IsSymmetric.le_adjoint (hT : T.IsSymmetric) (hT' : Dense (T.domain : Set E)) : T ≤ T† := by
   constructor

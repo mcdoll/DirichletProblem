@@ -630,7 +630,6 @@ private theorem norm_restrictFst_f_le (a : E') (hs : finrank ℝ E' < 2 * s)
       rw [SchwartzMap.smulLeftCLM_apply_apply (by fun_prop)]
       simp
     _ ≤ (∫ x : E, (1 + ‖x‖ ^ 2) ^ (-s)) ^ 2 * ∫ ξ, ‖(1 + ‖ξ‖ ^ 2) ^ (s / 2) • 𝓕 f ξ‖ ^ 2 := by
-
       sorry
     _ = _ := by
       simp only [restrictFst.e, ContinuousLinearMap.coe_coe,

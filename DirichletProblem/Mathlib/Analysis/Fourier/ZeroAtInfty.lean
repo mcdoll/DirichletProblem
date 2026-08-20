@@ -15,7 +15,7 @@ public import Mathlib.Analysis.Normed.Operator.Extend
 section FourierTransform
 
 variable {V E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
-  [NormedAddCommGroup V] [MeasurableSpace V] [BorelSpace V]
+  [NormedAddCommGroup V]
 
 open SchwartzMap MeasureTheory FourierTransform ComplexInnerProductSpace
 
@@ -28,7 +28,7 @@ variable [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
 @[simp]
 theorem toZeroAtInftyCLM_apply (f : 𝓢(V, E)) : toZeroAtInftyCLM ℂ V E f = f.toZeroAtInfty := rfl
 
-variable [CompleteSpace E]
+variable [CompleteSpace E] [MeasurableSpace V] [BorelSpace V]
 
 variable (V E) in
 /-- The Fourier transform on `L1` as a continuous linear map. -/

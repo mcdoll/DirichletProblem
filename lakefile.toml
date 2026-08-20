@@ -2,12 +2,16 @@ name = "DirichletProblem"
 version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["DirichletProblem"]
+lintDriver = "batteries/runLinter"
 
 [leanOptions]
-pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+pp.unicode.fun = true
+autoImplicit = false
 relaxedAutoImplicit = false
-weak.linter.mathlibStandardSet = true
 maxSynthPendingDepth = 3
+weak.linter.flexible = true
+weak.linter.mathlibStandardSet = true
+warn.sorry = false
 
 
 [[require]]
