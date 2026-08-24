@@ -28,6 +28,7 @@ variable {s : ℝ}
 open FourierTransform
 
 variable (F s) in
+/-- The space `H^s_K` -/
 def SobolevSupportedIn (K : Closeds E) : ClosedSubmodule ℂ (Sobolev E F s 2) where
   carrier := { f | dsupport f.toDistr ⊆ K }
   add_mem' {f g} hf hg := by
@@ -72,7 +73,7 @@ variable {s : ℝ} {K : Closeds E}
 
 namespace Sobolev
 
---variable (E F s) in
+/-- foo -/
 def projectionSupportedIn (K : Closeds E) : Sobolev E F s 2 →L[ℂ] Sobolev E F s 2 :=
   (SobolevSupportedIn F s K).toSubmodule.starProjection
 

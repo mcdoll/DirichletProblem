@@ -9,6 +9,7 @@ public import Mathlib.Analysis.Distribution.Distribution
 public import DirichletProblem.Mathlib.Analysis.Distribution.Sobolev
 public import DirichletProblem.Sobolev.SupportedIn
 public import Mathlib.Analysis.Distribution.Support
+public import DirichletProblem.Sobolev.ClosedSubmodule
 
 /-! # Sobolev spaces on domains via restriction
 
@@ -28,9 +29,13 @@ open scoped SchwartzMap CompactConvergenceCLM
 -- We do this because we don't want to run through the complexification machinery for every
 -- definition
 open scoped Distributions in
+/-- Notation for the space of "test functions", i.e. bundled smooth (infinitely differentiable) maps
+with compact support. -/
 scoped[MDDistributions] notation "𝓓'^{" n "}(" Ω ", " F ")" => TestFunction Ω ℂ n →L_c[ℂ] F
 
 open scoped Distributions in
+/-- Notation for the space of "test functions", i.e. bundled smooth (infinitely differentiable) maps
+with compact support. -/
 scoped[MDDistributions] notation "𝓓'(" Ω ", " F ")" => TestFunction Ω ℂ ⊤ →L_c[ℂ] F
 
 open scoped MDDistributions
@@ -51,6 +56,7 @@ theorem exists_norm_pow_le (K : Compacts E) (n : ℕ) : ∃ (C : ℝ), 0 ≤ C �
 variable [NormedSpace ℝ F] [NormedSpace 𝕜 F] [NormedSpace ℝ E]
 
 variable (𝕜 F) in
+/-- foo -/
 def toSchwartzMapLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →ₗ[𝕜] 𝓢(E, F) where
   toFun f := f.hasCompactSupport.toSchwartzMap f.contDiff
   map_add' f g := by ext; simp
@@ -67,6 +73,7 @@ theorem toSchwartzMapLM_apply_apply {K : Compacts E}
     f.toSchwartzMapLM 𝕜 F K x = f x := rfl
 
 variable (𝕜 F) in
+/-- foo -/
 def toSchwartzMapCLM (K : Compacts E) : ContDiffMapSupportedIn E F ⊤ K →L[𝕜] 𝓢(E, F) where
   toLinearMap := toSchwartzMapLM 𝕜 F K
   cont := show Continuous (toSchwartzMapLM 𝕜 F K) by
@@ -98,6 +105,7 @@ namespace TestFunction
 variable [NormedSpace ℝ E] [NormedSpace ℝ F] [NormedSpace 𝕜 F]
 
 variable (𝕜 F) in
+/-- foo -/
 def toSchwartzMapCLM (Ω : Opens E) : TestFunction Ω F ⊤ →L[𝕜] 𝓢(E, F) :=
   TestFunction.limitCLM 𝕜 (fun f ↦ f.hasCompactSupport.toSchwartzMap f.contDiff)
     (fun K _ ↦ ContDiffMapSupportedIn.toSchwartzMapCLM 𝕜 F K) (by intros; rfl)
@@ -293,6 +301,7 @@ namespace Sobolev
 variable [NormedSpace ℂ F]
 variable {Ω : Opens E} {s : ℝ}
 
+/-- Restriction of Sobolev functions -/
 def restrict (Ω : Opens E) : Sobolev E F s 2 →ₗ[ℂ] SobolevRestrict F Ω s where
   toFun f :=
     { toFun := f.toDistr.restrict Ω,
@@ -321,6 +330,7 @@ variable [NormedSpace ℂ F]
 variable {Ω : Opens E} {s : ℝ}
 
 open Classical in
+/-- Pick a representative -/
 def chooseSobolev (f : SobolevRestrict F Ω s) : Sobolev E F s 2 :=
   f.exists_memSobolev.choose_spec.2.toSobolev
 
@@ -352,6 +362,7 @@ section InnerProductSpace
 variable [InnerProductSpace ℂ F]
 variable {Ω : Opens E} {s : ℝ}
 
+/-- Every local Sobolev function defines a global Sobolev function. -/
 def toSobolev (f : SobolevRestrict F Ω s) : Sobolev E F s 2 :=
     f.chooseSobolev - Sobolev.projectionSupportedIn Ω.compl f.chooseSobolev
 
@@ -411,20 +422,16 @@ theorem toSobolev_range :
     apply toSobolev_restrict hf
 
 variable (F Ω s) in
-def _root_.Sobolev.supportedIn_toSobolevRestrict :
-    (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule ≃ₗ[ℂ] SobolevRestrict F Ω s where
+/-- Restriction as a linear equivalence -/
+def _root_.Sobolev.supportedInToSobolevRestrict :
+    (SobolevSupportedIn F s Ω.compl)ᗮ ≃ₗ[ℂ] SobolevRestrict F Ω s where
   toFun f := f.1.restrict Ω
   map_add' f g := by
     ext1
-    norm_cast
-    --simp
-    -- some lemma is missing here: (norm_cast closes the goal)
-    --rfl
+    simp
   map_smul' c f := by
     ext1
     simp
-    -- some lemma is missing here:
-    rfl
   invFun f := ⟨f.toSobolev, f.toSobolev_mem⟩
   left_inv f := by
     obtain ⟨f, hf⟩ := f
@@ -434,29 +441,30 @@ def _root_.Sobolev.supportedIn_toSobolevRestrict :
 
 theorem toSobolev_add (f g : SobolevRestrict F Ω s) :
     (f + g).toSobolev = f.toSobolev + g.toSobolev := by
-  have := map_add (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm f g
+  have := map_add (Sobolev.supportedInToSobolevRestrict F Ω s).symm f g
   rw [Subtype.ext_iff] at this
   exact this
 
 theorem toSobolev_smul (c : ℂ) (f : SobolevRestrict F Ω s) :
     (c • f).toSobolev = c • f.toSobolev := by
-  have := map_smul (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm c f
+  have := map_smul (Sobolev.supportedInToSobolevRestrict F Ω s).symm c f
   rw [Subtype.ext_iff] at this
   exact this
 
 @[simp]
-theorem _root_.Sobolev.supportedIn_toSobolevRestrict_apply
-    (f : (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule) :
-    Sobolev.supportedIn_toSobolevRestrict F Ω s f = f.1.restrict Ω := rfl
+theorem _root_.Sobolev.supportedInToSobolevRestrict_apply
+    (f : (SobolevSupportedIn F s Ω.compl)ᗮ) :
+    Sobolev.supportedInToSobolevRestrict F Ω s f = f.1.restrict Ω := rfl
 
 @[simp]
-theorem _root_.Sobolev.supportedIn_toSobolevRestrict_symm_apply
+theorem _root_.Sobolev.supportedInToSobolevRestrict_symm_apply
     (f : SobolevRestrict F Ω s) :
-    (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm f = ⟨f.toSobolev, f.toSobolev_mem⟩ := rfl
+    (Sobolev.supportedInToSobolevRestrict F Ω s).symm f = ⟨f.toSobolev, f.toSobolev_mem⟩ := rfl
 
 variable (F Ω s) in
+/-- Extention as a linear map -/
 def toSobolevₗ : SobolevRestrict F Ω s →ₗ[ℂ] Sobolev E F s 2 :=
-  Submodule.subtype _ ∘ₗ (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm.toLinearMap
+  Submodule.subtype _ ∘ₗ (Sobolev.supportedInToSobolevRestrict F Ω s).symm.toLinearMap
 
 @[simp]
 theorem toSobolevₗ_apply (f : SobolevRestrict F Ω s) : f.toSobolevₗ F Ω s = f.toSobolev := rfl
@@ -469,11 +477,11 @@ theorem injective_toSobolevₗ : Function.Injective (toSobolevₗ F Ω s) := by
 instance instNormedAddCommGroup :
     NormedAddCommGroup (SobolevRestrict F Ω s) :=
   NormedAddCommGroup.induced (SobolevRestrict F Ω s) ((SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule)
-    (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm.toLinearMap
-    (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm.injective
+    (Sobolev.supportedInToSobolevRestrict F Ω s).symm.toLinearMap
+    (Sobolev.supportedInToSobolevRestrict F Ω s).symm.injective
 
-theorem norm_supportedIn_toSobolevRestrict_symm (y : SobolevRestrict F Ω s) :
-    ‖(Sobolev.supportedIn_toSobolevRestrict F Ω s).symm y‖ = ‖y‖ := rfl
+theorem norm_supportedInToSobolevRestrict_symm (y : SobolevRestrict F Ω s) :
+    ‖(Sobolev.supportedInToSobolevRestrict F Ω s).symm y‖ = ‖y‖ := rfl
 
 theorem norm_toSobolev (y : SobolevRestrict F Ω s) :
     ‖y.toSobolev‖ = ‖y‖ := rfl
@@ -493,16 +501,18 @@ instance instInnerProductSpace (s : ℝ) :
   smul_left f g c := by rw [toSobolev_smul, inner_smul_left]
 
 variable (F Ω s) in
+/-- Restriction as a linear isometry equivalence. -/
 def _root_.Sobolev.toSobolevRestrict :
-  (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule ≃ₗᵢ[ℂ] SobolevRestrict F Ω s where
-  __ := Sobolev.supportedIn_toSobolevRestrict F Ω s
+  (SobolevSupportedIn F s Ω.compl).toSubmoduleᗮ ≃ₗᵢ[ℂ] SobolevRestrict F Ω s where
+  __ := Sobolev.supportedInToSobolevRestrict F Ω s
   norm_map' x := calc
-    _ = ‖(Sobolev.supportedIn_toSobolevRestrict F Ω s).symm <|
-        (Sobolev.supportedIn_toSobolevRestrict F Ω s) x‖ := by
-      rw [norm_supportedIn_toSobolevRestrict_symm]
+    _ = ‖(Sobolev.supportedInToSobolevRestrict F Ω s).symm <|
+        (Sobolev.supportedInToSobolevRestrict F Ω s) x‖ := by
+      rw [norm_supportedInToSobolevRestrict_symm]
+      rfl -- yuck
     _ = ‖x‖ := by
       congr
-      exact (Sobolev.supportedIn_toSobolevRestrict F Ω s).symm_apply_apply x
+      exact (Sobolev.supportedInToSobolevRestrict F Ω s).symm_apply_apply x
 
 @[simp]
 theorem _root_.Sobolev.toSobolevRestrict_apply
@@ -515,18 +525,18 @@ theorem _root_.Sobolev.toSobolevRestrict_symm_apply
     (Sobolev.toSobolevRestrict F Ω s).symm f = ⟨f.toSobolev, f.toSobolev_mem⟩ := rfl
 
 variable (F Ω s) in
+/-- Restriction as a continuous linear map -/
 def _root_.Sobolev.restrictCLM : Sobolev E F s 2 →L[ℂ] SobolevRestrict F Ω s :=
   (Sobolev.toSobolevRestrict F Ω s).toContinuousLinearEquiv.toContinuousLinearMap ∘L
-    (SobolevSupportedIn F s Ω.compl)ᗮ.orthogonalProjectionOnto
+    (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule.orthogonalProjectionOnto
 
 set_option backward.isDefEq.respectTransparency false in
 -- defeq abuse in coercions between closed submodules and orthogonality
 theorem root_.Sobolev.restrictCLM_apply_of_mem {f : Sobolev E F s 2}
     (hf : f ∈ SobolevSupportedIn F s Ω.compl) : f.restrictCLM F Ω s = 0 := by
-  have := Submodule.orthogonalProjectionOnto_eq_zero_iff
-    (K := (SobolevSupportedIn F s Ω.compl)ᗮ.toSubmodule) (v := f)
-  simp only [ClosedSubmodule.toSubmodule_orthogonal_eq, Submodule.orthogonal_orthogonal] at this
-  simp [Sobolev.restrictCLM, this.mpr hf]
+  have : (SobolevSupportedIn F s Ω.compl).toSubmoduleᗮ.orthogonalProjectionOnto f = 0 := by
+    simpa [Submodule.orthogonalProjectionOnto_eq_zero_iff, Submodule.orthogonal_orthogonal]
+  simp [Sobolev.restrictCLM, this]
 
 set_option backward.isDefEq.respectTransparency false in
 -- defeq abuse in coercions between closed submodules and orthogonality
@@ -535,7 +545,6 @@ theorem root_.Sobolev.restrictCLM_apply_of_mem_orthogonal {f : Sobolev E F s 2}
   have := Submodule.orthogonalProjectionOnto_mem_subspace_eq_self ⟨f, hf⟩
   simp only [ClosedSubmodule.toSubmodule_orthogonal_eq] at this
   simp [Sobolev.restrictCLM, this]
-  rfl
 
 @[simp]
 theorem root_.Sobolev.restrictCLM_apply (f : Sobolev E F s 2) :

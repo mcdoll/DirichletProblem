@@ -24,16 +24,6 @@ open scoped SchwartzMap CompactConvergenceCLM
 
 variable {Ω : Opens E} {s : ℝ}
 
-variable (W : ClosedSubmodule ℂ F)
-
-instance ClosedSubmodule.normedAddCommGroup (W : ClosedSubmodule ℂ F) : NormedAddCommGroup W :=
-  fast_instance% W.toSubmodule.normedAddCommGroup
-
-instance ClosedSubmodule.normedSpace (W : ClosedSubmodule ℂ F) : NormedSpace ℂ W :=
-  fast_instance% W.toSubmodule.normedSpace
-
-instance ClosedSubmodule.innerProductSpace (W : ClosedSubmodule ℂ F) : InnerProductSpace ℂ W :=
-  fast_instance% W.toSubmodule.innerProductSpace
-
 variable (F Ω s) in
+/-- The space `H^s_0` -/
 abbrev SobolevRestrictZero := (TestFunction.toSobolevRestrict F Ω s).range.closure

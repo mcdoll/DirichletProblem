@@ -55,6 +55,7 @@ open ENNReal
 variable {p : ℝ≥0∞} [Fact (1 ≤ p)]
 
 variable (𝕜 p) in
+/-- The equivalence between `𝓢(E × E', F)` an `𝓢(WithLp p (E × E'), F)`. -/
 def precompProdLp : 𝓢(E × E', F) ≃L[𝕜] 𝓢(WithLp p (E × E'), F) :=
   compCLEOfContinuousLinearEquiv 𝕜 (WithLp.prodContinuousLinearEquiv p ℝ E E')
 
@@ -67,6 +68,7 @@ theorem precompProdLp_symm_apply (f : 𝓢(WithLp p (E × E'), F)) (x : E × E')
   (precompProdLp 𝕜 p).symm f x = f (WithLp.toLp p x) := rfl
 
 variable (𝕜 E' F) in
+/-- The map `f ↦ (x ↦ f (a, x))` as continuous linear map between Schwartz functions. -/
 def restrictSnd (a : E) : 𝓢(E × E', F) →L[𝕜] 𝓢(E', F) :=
   compCLMOfAntilipschitz (g := fun x ↦ (a, x)) (K := 1) 𝕜 ?_ ?_
 where finally
@@ -93,6 +95,7 @@ where finally
     simp [edist_dist, dist_eq_norm]
 
 variable (𝕜 E F) in
+/-- The map `f ↦ (x ↦ f (x, a))` as continuous linear map between Schwartz functions. -/
 def restrictFst (a : E') : 𝓢(E × E', F) →L[𝕜] 𝓢(E, F) :=
   compCLMOfAntilipschitz (g := fun x ↦ (x, a)) (K := 1) 𝕜 ?_ ?_
 where finally

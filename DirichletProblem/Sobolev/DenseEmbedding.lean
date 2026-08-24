@@ -168,12 +168,15 @@ theorem isEquivalent_self (p : Seminorm 𝕜₁ E₁) : p.IsEquivalent p := by g
 
 end Seminorm
 
+/-- foo -/
 def SeminormFamily.IsBoundedBy (p : SeminormFamily 𝕜₁ E₁ ι) (q : SeminormFamily 𝕜₁ E₁ ι') : Prop :=
   ∀ i, ∃ (s : Finset ι'), (p i).IsBoundedBy (s.sup q)
 
+/-- foo -/
 def SeminormFamily.IsEquivalent (p : SeminormFamily 𝕜₁ E₁ ι) (q : SeminormFamily 𝕜₁ E₁ ι') : Prop :=
   p.IsBoundedBy q ∧ q.IsBoundedBy p
 
+/-- foo -/
 def IsWithSeminormsMap (f : E₁ →ₛₗ[σ₁₂] E₂) (p : SeminormFamily 𝕜₁ E₁ ι)
     (q : SeminormFamily 𝕜₂ E₂ ι') : Prop :=
   Seminorm.IsBounded (q.comp f) p LinearMap.id
@@ -181,13 +184,16 @@ def IsWithSeminormsMap (f : E₁ →ₛₗ[σ₁₂] E₂) (p : SeminormFamily �
 variable [TopologicalSpace E₁] [TopologicalSpace E₂]
 
 variable (𝕜₁ E₁) in
+/-- foo -/
 def continuousSeminorms : SeminormFamily 𝕜₁ E₁ {p : Seminorm 𝕜₁ E₁ // Continuous p} := (·.1)
 
-def IsCodomainEmbedding [PolynormableSpace 𝕜₂ E₂] (f : E₁ →ₛₗ[σ₁₂] E₂)
+/-- foo -/
+def IsCodomainEmbedding (f : E₁ →ₛₗ[σ₁₂] E₂)
     (p : SeminormFamily 𝕜₁ E₁ ι) : Prop :=
   ((continuousSeminorms 𝕜₂ E₂).comp f).IsBoundedBy p
 
-structure IsDomainEmbedding [PolynormableSpace 𝕜₁ E₁] (f : E₁ →ₛₗ[σ₁₂] E₂)
+/-- foo -/
+structure IsDomainEmbedding (f : E₁ →ₛₗ[σ₁₂] E₂)
     (q : SeminormFamily 𝕜₂ E₂ ι') : Prop where
   dense : DenseRange f
   foobar : (continuousSeminorms 𝕜₁ E₁).IsBoundedBy (q.comp f)

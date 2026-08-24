@@ -44,6 +44,7 @@ variable [NormedAddCommGroup E] [NormedAddCommGroup F]
 open scoped ENNReal
 open BoundedContinuousFunction MeasureTheory
 
+/-- foo -/
 def foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
     (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) : E →ᵇ ℂ :=
   ofNormedAddCommGroup (fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2) • g x) ?_ C ?_
@@ -64,6 +65,7 @@ theorem coe_foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
 variable [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
   {p : ℝ≥0∞} [Fact (1 ≤ p)]
 
+/-- foo -/
 def foo' {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
     (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) :
     Lp F p (volume : Measure E) →L[ℂ] Lp F p (volume : Measure E) :=
@@ -113,6 +115,7 @@ theorem _root_.MeasureTheory.Lp.memLp_ofReal_rpow_add_sq_norm (hs : Module.finra
   apply (memLp_rpow_add_sq_norm hs).ofReal
 
 variable (E F s) in
+/-- foo -/
 private
 def blubb : Lp F 2 (volume : Measure E) →L[ℂ] Lp F 1 (volume : Measure E) :=
   if hs : Module.finrank ℝ E < 2 * s then
@@ -301,6 +304,7 @@ def toLpₗ : Sobolev E F s p →ₗ[ℂ] Lp F p (volume : Measure E) where
   map_smul' c f := by rfl
 
 variable (s) in
+/-- Define the Sobolev function `𝓕⁻ (1 + ‖x‖ ^ 2) ^ (s / 2) 𝓕 f` for `f : Lp`. -/
 def ofLp (f : Lp F p (volume : Measure E)) : Sobolev E F s p where
   toDistr := besselPotential E F (-s) f
   sobFn := f
@@ -339,6 +343,7 @@ instance instNormedSpace :
     rfl
 
 variable (E F s p) in
+/-- The linear isometry equivalence between `H^s` and `Lp`. -/
 def toLpₗᵢ :
     Sobolev E F s p ≃ₗᵢ[ℂ] Lp F p (volume : Measure E) where
   __ := toLpₗ E F s p
@@ -451,6 +456,7 @@ namespace TemperedDistribution
 
 variable {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
 
+/-- foo -/
 def MemSobolev.toSobolev {f : 𝓢'(E, F)} (hf : MemSobolev s p f) : Sobolev E F s p where
   toDistr := f
   sobFn := hf.choose
@@ -661,6 +667,7 @@ theorem norm_restrictFst_le (a : E') (hs : Module.finrank ℝ E' < 2 * s) :
 
 end Trace
 
+/-- foo -/
 @[no_expose]
 def fourierMultiplierCLM (s s' C : ℝ) (g : E → ℂ)
     (hg₁ : g.HasTemperateGrowth) (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) :
@@ -689,6 +696,7 @@ theorem fourierMultiplierCLM_toDistr {s : ℝ} (s' C : ℝ) {g : E → ℂ} (hg�
   ring_nf
 
 variable (E F) in
+/-- Monotonicity -/
 @[no_expose]
 def mono (s s' : ℝ) :
     Sobolev E F s 2 →L[ℂ] Sobolev E F s' 2 :=
@@ -713,6 +721,7 @@ theorem mono_apply_eq_zero_of_lt (h : s < s') (f : Sobolev E F s 2) :
 open LineDeriv Laplacian Real
 
 variable (F) in
+/-- Partial derivative -/
 def lineDerivOp (s : ℝ) (m : E) : Sobolev E F s 2 →L[ℂ] Sobolev E F (s - 1) 2 :=
   (2 * π * Complex.I) • (fourierMultiplierCLM s (s - 1) ‖m‖ (fun x ↦ Complex.ofReal <| inner ℝ x m)
     ?_ ?_)
@@ -744,6 +753,7 @@ theorem lineDerivOp_toDistr (m : E) {s : ℝ} (f : Sobolev E F s 2) :
     lineDeriv_eq_fourierMultiplierCLM]
 
 variable (E F) in
+/-- The laplacian -/
 def laplacian (s : ℝ) : Sobolev E F s 2 →L[ℂ] Sobolev E F (s - 2) 2 :=
   -(2 * π) ^ 2 • (fourierMultiplierCLM s (s - 2) 1 (fun x ↦ Complex.ofReal <| ‖x‖ ^ 2) ?_ ?_)
 where finally
@@ -764,6 +774,7 @@ theorem laplacian_toDistr {s : ℝ} (f : Sobolev E F s 2) : (Δ f).toDistr = Δ 
     laplacian_eq_fourierMultiplierCLM]
 
 variable (E) in
+/-- Delta distribution -/
 private def deltaAux (s : ℝ) (hs : 2 * s < -Module.finrank ℝ E) : Sobolev E ℂ s 2 where
   toDistr := TemperedDistribution.delta (0 : E)
   sobFn := 𝓕⁻ (MeasureTheory.Lp.memLp_ofReal_rpow_add_sq_norm (s := -s) (by grind)).toLp
@@ -785,6 +796,7 @@ private def deltaAux (s : ℝ) (hs : 2 * s < -Module.finrank ℝ E) : Sobolev E 
     simp [h]
 
 variable (E s) in
+/-- Delta distribution -/
 @[no_expose]
 def delta : Sobolev E ℂ s 2 :=
   if hs : 2 * s < -Module.finrank ℝ E then deltaAux E s hs else 0

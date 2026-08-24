@@ -24,7 +24,7 @@ namespace BoundedContinuousFunction
 
 variable (𝕜 μ) in
 /-- The map from bounded continuous functions to `Lp` with `p = ⊤` as a continuous linear map. -/
-def toLp_top : (α →ᵇ E) →L[𝕜] Lp E ⊤ μ :=
+def toLpTop : (α →ᵇ E) →L[𝕜] Lp E ⊤ μ :=
   LinearMap.mkContinuous
     { toFun f := f.memLp_top.toLp
       map_add' f g := by
@@ -39,6 +39,6 @@ def toLp_top : (α →ᵇ E) →L[𝕜] Lp E ⊤ μ :=
     grind [eLpNormEssSup_le_of_ae_bound, Eventually.of_forall, norm_coe_le_norm]
 
 @[simp]
-theorem toLp_top_apply (f : α →ᵇ E) : toLp_top 𝕜 μ f = f.memLp_top.toLp := rfl
+theorem toLpTop_apply (f : α →ᵇ E) : toLpTop 𝕜 μ f = f.memLp_top.toLp := rfl
 
 end BoundedContinuousFunction

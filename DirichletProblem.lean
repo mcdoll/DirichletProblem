@@ -9,6 +9,7 @@ import DirichletProblem.Mathlib.Analysis.InnerProductSpace.LinearPMap
 import DirichletProblem.Mathlib.MeasureTheory.Function.Holder
 import DirichletProblem.Mathlib.MeasureTheory.Function.LpSpace.ContinuousFunctions
 import DirichletProblem.Sobolev.Basic
+import DirichletProblem.Sobolev.ClosedSubmodule
 import DirichletProblem.Sobolev.DenseEmbedding
 import DirichletProblem.Sobolev.Restrict
 import DirichletProblem.Sobolev.RestrictZero

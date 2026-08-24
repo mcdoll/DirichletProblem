@@ -66,6 +66,7 @@ theorem integrable_schwartzMap_smul {f : E → F} {k : ℕ} (hf : LocallyIntegra
   rw [← MeasureTheory.integrableOn_univ, ← Set.union_compl_self s]
   exact h₂.union h₁
 
+/-- Every locally integrable and polynomially bounded function defines a tempered distribution. -/
 def toTemperedDistribution {f : E → F} {k : ℕ} (hf : LocallyIntegrable f μ)
     (hf' : f =O[Filter.cocompact E] (‖·‖ ^ k)) : 𝓢'(E, F) :=
   toPointwiseConvergenceCLM _ _ _ _ <|
@@ -199,6 +200,7 @@ theorem integrable_schwartzMap_smul [hμ : μ.HasTemperateGrowth] [IsLocallyFini
   simp
 
 set_option backward.privateInPublic true in
+/-- Every bounded function defines a tempered distribution. -/
 def toTemperedDistribution (f : E →ᵇ F) : 𝓢'(E, F) :=
   (map_continuous f).locallyIntegrable.toTemperedDistribution (μ := μ) (f := f) (k := 0) ?_
 where finally
@@ -233,6 +235,7 @@ variable [CompleteSpace F]
 
 set_option backward.privateInPublic true in
 variable (E F) in
+/-- The embedding of bounded functiont to tempered distributions as a continuous linear map. -/
 def toTemperedDistributionCLM : (E →ᵇ F) →L[ℂ] 𝓢'(E, F) where
   toFun f := f.toTemperedDistribution μ
   map_add' f₁ f₂ := by
@@ -246,9 +249,9 @@ def toTemperedDistributionCLM : (E →ᵇ F) →L[ℂ] 𝓢'(E, F) where
     intro g
     simp only [toTemperedDistribution_apply]
     convert ((lsmul ℂ ℂ).lpPairing μ 1 ⊤ (g.toLp 1 μ) ∘L
-      (BoundedContinuousFunction.toLp_top (E := F) ℂ μ)).cont with f
+      (BoundedContinuousFunction.toLpTop (E := F) ℂ μ)).cont with f
     simp only [coe_comp, AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, coe_coe,
-      Function.comp_apply, toLp_top_apply, lpPairing_eq_integral, lsmul_apply]
+      Function.comp_apply, toLpTop_apply, lpPairing_eq_integral, lsmul_apply]
     apply integral_congr_ae
     filter_upwards [g.coeFn_toLp 1 μ, f.memLp_top.coeFn_toLp] with x hg hf
     simp [hg, hf]
