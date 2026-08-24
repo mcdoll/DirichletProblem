@@ -188,27 +188,11 @@ theorem bar' {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric) (h₁ : T.IsClosed) {
       simp only [SetLike.mem_coe, mem_range_iff']
       use a₀
 
-variable (T) in
-/-- The kernel of a `E →ₗ.[𝕜] F` -/
-def ker : Submodule 𝕜 E := T.toFun.ker.map T.domain.subtype
-
-omit [CompleteSpace E]
-theorem ker_eq_bot : T.ker = ⊥ ↔ ∀ x, T x = 0 → x = 0 := by
-  unfold ker
-  simp [← LinearMap.le_ker_iff_map, LinearMap.ker_eq_bot']
-
-omit [CompleteSpace E]
-theorem sub_mem_ker_iff {x y : T.domain} : ↑(x - y) ∈ T.ker ↔ T x = T y := by
-  unfold ker
-  simp_rw [Submodule.mem_map, LinearMap.mem_ker, Submodule.subtype_apply]
-  norm_cast
-  simp [LinearPMap.map_sub, sub_eq_zero]
-
 omit [CompleteSpace E'] in
 theorem IsSymmetric.ker_const_smul_im_eq_bot {T : E' →ₗ.[ℂ] E'} (hT : IsSymmetric T)
     {c : ℝ} (hc : c ≠ 0) :
     (((c • I) • LinearMap.id (R := ℂ) (M := E')) +ᵥ T).ker = ⊥ := by
-  rw [LinearPMap.ker_eq_bot]
+  rw [LinearPMap.ker_eq_bot']
   intro ⟨x, hx⟩ hx'
   simp only [vadd_domain, coe_vadd, LinearMap.coe_comp, LinearMap.coe_smul,
     LinearMap.id_coe, Submodule.coe_subtype, Pi.add_apply, Function.comp_apply, Pi.smul_apply,
@@ -296,7 +280,7 @@ theorem mem_range_orthogonal_iff' {T : E' →ₗ.[ℂ] E'}
 
 theorem ker_adjoint_eq_bot_iff {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : Set E')) :
     (T†).ker = ⊥ ↔ Dense (T.toFun.range : Set E') := by
-  rw [ker_eq_bot]
+  rw [ker_eq_bot']
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff]
   rw [Submodule.eq_bot_iff]
   simp only [Subtype.forall, Submodule.mk_eq_zero]
