@@ -15,14 +15,50 @@ open RCLike LinearPMap WithLp
 
 open scoped ComplexConjugate
 
-variable {𝕜 E E' F : Type*} [RCLike 𝕜]
+variable {𝕜 𝕜₂ D E E' Eₗ F : Type*}
 
-section LinearMap
+variable [RCLike 𝕜]
 
+section Concrete
+
+variable [AddCommGroup D] [Module 𝕜 D]
 variable [AddCommGroup E] [Module 𝕜 E]
 variable [AddCommGroup F] [Module 𝕜 F]
 
-end LinearMap
+variable (𝕜 D E F) in
+/-- A `ConcreteLinearPMap` is a tuple of a linear map `D →ₗ[𝕜] F` and a linear map `D →ₗ[𝕜] E`,
+where the later acts an embedding (and hence is assumed to be injective). -/
+structure ConcreteLinearPMap where
+  toFun : D →ₗ[𝕜] F
+  emb : D →ₗ[𝕜] E
+  inj : Function.Injective emb
+
+namespace ConcreteLinearPMap
+
+variable {f : ConcreteLinearPMap 𝕜 D E F}
+
+variable (f) in
+/-- Define an unbounded operator from a linear operator and an embedding. -/
+def toLinearPMap : E →ₗ.[𝕜] F where
+  domain := f.emb.range
+  toFun := f.emb.ker |>.liftQ f.toFun ?_ |>.comp f.emb.quotKerEquivRange.symm.toLinearMap
+where finally
+  · have := f.inj
+    rw [← LinearMap.ker_eq_bot] at this
+    simp [this]
+
+@[simp]
+theorem toLinearPMap_domain : f.toLinearPMap.domain = f.emb.range := rfl
+
+@[simp]
+theorem toLinearPMap_apply (x : D) : f.toLinearPMap ⟨f.emb x, by simp⟩ = f.toFun x := by
+  simp only [toLinearPMap, mk_apply, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
+  rw [LinearMap.quotKerEquivRange_symm_apply_image f.emb x (by simp)]
+  simp
+
+end ConcreteLinearPMap
+
+end Concrete
 
 
 variable [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
@@ -43,6 +79,26 @@ def IsEssentiallySelfAdjoint [CompleteSpace E] (T : E →ₗ.[𝕜] E) : Prop :=
 
 variable {T S : E →ₗ.[𝕜] E}
 
+open Filter
+open scoped Topology
+
+theorem isClosed_iff_seq : T.IsClosed ↔ ∀ (a : ℕ → T.domain) (a₀ : E) (y₀ : E),
+    Tendsto ((↑) ∘ a) atTop (𝓝 a₀) → Tendsto (T ∘ a) atTop (𝓝 y₀) →
+    ∃ (ha₀ : a₀ ∈ T.domain), T ⟨a₀, ha₀⟩ = y₀ := by
+  unfold IsClosed
+  rw [← isSeqClosed_iff_isClosed, IsSeqClosed]
+  constructor
+  · intro h a a₀ y₀ ha hTa
+    simpa using h (by intro; simp) (Filter.Tendsto.prodMk_nhds ha hTa)
+  · intro h a ⟨a₀, y₀⟩ ha ha₀
+    simp only [SetLike.mem_coe, mem_graph_iff, Subtype.exists, exists_and_left,
+      exists_eq_left] at ha ⊢
+    choose ha ha' using ha
+    apply h (fun n ↦ ⟨(a n).1, ha n⟩) a₀ y₀
+    · exact ha₀.fst_nhds
+    · convert ha₀.snd_nhds
+      simp [ha']
+
 /- todo: move this-/
 theorem IsClosed.closure_eq (hT : T.IsClosed) : T.closure = T := by
   apply eq_of_eq_graph
@@ -52,9 +108,20 @@ theorem mem_range_iff' {f : E →ₗ.[𝕜] E} {y : E} :
     y ∈ f.toFun.range ↔ ∃ x : E, (x, y) ∈ f.graph := by
   exact LinearPMap.mem_range_iff
 
-theorem IsClosed.vadd {f : E →ₗ.[𝕜] E} (hf : f.IsClosed) (g : E →ₗ[𝕜] E) : (g +ᵥ f).IsClosed := by
-  rw [IsClosed] at hf ⊢
-  sorry
+theorem IsClosed.vadd' {f : E →ₗ.[𝕜] E} (hf : f.IsClosed) {g : E →ₗ[𝕜] E} (hg : Continuous g) :
+    (g +ᵥ f).IsClosed := by
+  rw [isClosed_iff_seq] at hf ⊢
+  intro a a₀ y₀ ha₀ hy₀
+  have h' : Tendsto (↑f ∘ a) atTop (𝓝 (y₀ - g a₀)) := by
+    convert hy₀.sub ((hg.tendsto a₀).comp ha₀)
+    simp
+  obtain ⟨ha₀', h''⟩ := hf a a₀ (y₀ - g a₀) ha₀ h'
+  use ha₀'
+  simp [h'']
+
+theorem IsClosed.vadd {f : E →ₗ.[𝕜] E} (hf : f.IsClosed) (g : E →L[𝕜] E) :
+    (g.toLinearMap +ᵥ f).IsClosed :=
+  hf.vadd' g.continuous
 
 theorem IsClosable.closure_adjoint [CompleteSpace E] (hT : T.IsClosable)
     (hT' : Dense (T.domain : Set E)) :
@@ -176,14 +243,12 @@ theorem bar' {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric) (h₁ : T.IsClosed) {
             module
       obtain ⟨a₀, ha_lim⟩ := this
       have ha₀' : (a₀, x₀) ∈ ((c • Complex.I) • LinearMap.id (R := ℂ) (M := E') +ᵥ T).graph := by
-        apply IsClosed.isSeqClosed (h₁.vadd _) (x := fun n ↦ (a n, x n)) (p := (a₀, x₀))
+        have : Continuous ((c • Complex.I) • LinearMap.id (R := ℂ) (M := E')) :=
+          ((c • Complex.I) • ContinuousLinearMap.id ℂ E').cont
+        apply IsClosed.isSeqClosed (h₁.vadd ((c • Complex.I) • ContinuousLinearMap.id ℂ E'))
+          (x := fun n ↦ (a n, x n)) (p := (a₀, x₀))
         · intro n
-          simp only [SetLike.mem_coe, mem_graph_iff, vadd_domain, coe_vadd,
-            LinearMap.coe_comp, LinearMap.coe_smul,
-            LinearMap.id_coe, Submodule.coe_subtype, Pi.add_apply,
-            Function.comp_apply, Pi.smul_apply, id_eq, Subtype.exists, exists_and_left,
-            exists_eq_left]
-          use ha_mem n, hax n
+          simpa using ⟨ha_mem n, hax n⟩
         · exact ha_lim.prodMk_nhds h_lim
       simp only [SetLike.mem_coe, mem_range_iff']
       use a₀
@@ -329,8 +394,7 @@ theorem isSelfAdjoint_tfae {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
   tfae_have 2 → 3 := by
     intro ⟨h₁, h₂, h₃⟩
     constructor
-    · --apply?
-      rwa [foo' hT', Submodule.dense_iff_topologicalClosure_eq_top,
+    · rwa [foo' hT', Submodule.dense_iff_topologicalClosure_eq_top,
         IsClosed.submodule_topologicalClosure_eq] at h₃
       convert! bar' hT h₁ (c := 1) (by simp) using 4
       simp
@@ -361,6 +425,5 @@ theorem isSelfAdjoint_tfae {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
     simp only [vadd_domain, AddSubgroupClass.coe_sub, Submodule.mem_bot, sub_eq_zero] at hy'
     exact hy'.symm
   tfae_finish
-
 
 end LinearPMap

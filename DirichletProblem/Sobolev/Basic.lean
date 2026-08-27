@@ -713,6 +713,11 @@ variable {s' : ℝ}
 theorem mono_apply (h : s' ≤ s) (f : Sobolev E F s 2) : (f.mono E F s s').toDistr = f.toDistr := by
   simp [mono, h]
 
+theorem mono_injective (h : s' ≤ s) : Function.Injective (Sobolev.mono E F s s') := by
+  intro f₁ f₂ hf
+  ext u
+  rw [← mono_apply h, ← mono_apply h, hf]
+
 theorem mono_apply_eq_zero_of_lt (h : s < s') (f : Sobolev E F s 2) :
     (f.mono E F s s').toDistr = 0 := by
   have h : ¬ s' ≤ s := by grind

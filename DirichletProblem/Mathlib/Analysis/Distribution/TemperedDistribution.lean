@@ -212,19 +212,16 @@ where finally
   grw [BoundedContinuousFunction.norm_coe_le_norm f x]
   simp
 
-set_option backward.privateInPublic true in
 @[simp]
 theorem toTemperedDistribution_apply (f : E →ᵇ F) (g : 𝓢(E, ℂ)) :
     f.toTemperedDistribution μ g = ∫ x, g x • f x ∂μ := rfl
 
-set_option backward.privateInPublic true in
 theorem toTemperedDistribution_eq_zero_iff [FiniteDimensional ℝ E] [CompleteSpace F]
     [μ.IsOpenPosMeasure] (f : E →ᵇ F) :
     f.toTemperedDistribution μ = 0 ↔ f = 0 := by
   rw [toTemperedDistribution, LocallyIntegrable.toTemperedDistribution_eq_zero_iff' _ _
     f.continuous, ← coe_zero, DFunLike.coe_fn_eq]
 
-set_option backward.privateInPublic true in
 @[simp]
 theorem _root_.SchwartzMap.toBCF_toTemperedDistribution (f : 𝓢(E, F)) :
     f.toBoundedContinuousFunction.toTemperedDistribution μ = f.toTemperedDistributionCLM E F μ := by
@@ -256,12 +253,10 @@ def toTemperedDistributionCLM : (E →ᵇ F) →L[ℂ] 𝓢'(E, F) where
     filter_upwards [g.coeFn_toLp 1 μ, f.memLp_top.coeFn_toLp] with x hg hf
     simp [hg, hf]
 
-set_option backward.privateInPublic true in
 @[simp]
 theorem toTemperedDistributionCLM_apply (f : E →ᵇ F) :
     f.toTemperedDistributionCLM E F μ = f.toTemperedDistribution μ := rfl
 
-set_option backward.privateInPublic true in
 theorem toTemperedDistributionCLM_ker_eq_bot [FiniteDimensional ℝ E] [μ.IsOpenPosMeasure] :
     (toTemperedDistributionCLM E F μ).ker = ⊥ := by
   rw [LinearMap.ker_eq_bot', ContinuousLinearMap.coe_coe]
@@ -279,7 +274,6 @@ variable [NormedAddCommGroup E] [NormedAddCommGroup F] [InnerProductSpace ℝ E]
 variable [MeasurableSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [hμ : (volume (α := E)).HasTemperateGrowth] [CompleteSpace F]
 
-set_option backward.privateInPublic true in
 theorem fourier_toTemperedDistributionCLM_eq (f : Lp (α := E) F 1) :
     𝓕 (f : 𝓢'(E, F)) = (Real.Lp.fourierTransform f).toTemperedDistribution := by
   set p := fun f : Lp (α := E) F 1 ↦
@@ -296,7 +290,6 @@ theorem fourier_toTemperedDistributionCLM_eq (f : Lp (α := E) F 1) :
     simp [SchwartzMap.toLp_one_fourierTransform_eq,
       TemperedDistribution.fourier_toTemperedDistributionCLM_eq f]
 
-set_option backward.privateInPublic true in
 theorem fourierInv_toTemperedDistributionCLM_eq (f : Lp (α := E) F 1) :
     𝓕⁻ (f : 𝓢'(E, F)) = (Real.Lp.fourierTransformInv f).toTemperedDistribution := by
   set p := fun f : Lp (α := E) F 1 ↦

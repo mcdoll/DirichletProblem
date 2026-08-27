@@ -130,8 +130,6 @@ theorem IsBoundedBy.add (h : p.IsBoundedBy q) (h' : p'.IsBoundedBy q') :
 
 instance : IsStrictOrderedModule ℕ ℝ where
 
---instance : IsOrderedModule ℕ ℝ where
-
 @[grind .]
 theorem IsBoundedBy.add_left (h : p.IsBoundedBy q) (h' : p'.IsBoundedBy q) :
     (p + p').IsBoundedBy q := by

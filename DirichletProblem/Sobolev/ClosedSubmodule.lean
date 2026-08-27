@@ -6,7 +6,9 @@ Authors: Moritz Doll
 module
 
 public import Mathlib.Analysis.InnerProductSpace.Subspace
-public import Mathlib.Analysis.InnerProductSpace.Orthogonal
+public import Mathlib.Topology.Algebra.Module.ClosedSubmodule
+
+/-! # Missing closed submodule instances -/
 
 public section
 
