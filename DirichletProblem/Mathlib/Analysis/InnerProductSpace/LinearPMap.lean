@@ -29,7 +29,9 @@ variable (𝕜 D E F) in
 /-- A `ConcreteLinearPMap` is a tuple of a linear map `D →ₗ[𝕜] F` and a linear map `D →ₗ[𝕜] E`,
 where the later acts an embedding (and hence is assumed to be injective). -/
 structure ConcreteLinearPMap where
+  /-- The underlying map -/
   toFun : D →ₗ[𝕜] F
+  /-- The embedding of the domain -/
   emb : D →ₗ[𝕜] E
   inj : Function.Injective emb
 
