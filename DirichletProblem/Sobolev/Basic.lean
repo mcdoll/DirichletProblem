@@ -425,6 +425,10 @@ theorem toDistr_toSobolev (f : 𝓢(E, F)) :
     ← fourierMultiplierCLM_toTemperedDistributionCLM_eq (by fun_prop), ← besselPotential]
   simp
 
+theorem toSobolev_eq_toLp_of_eq_zero (f : 𝓢(E, F)) (hs : s = 0) :
+    (f.toSobolev E F s p).sobFn = f.toLp p := by
+  simp [toSobolev_apply, hs]
+
 theorem norm_toSobolev (f : 𝓢(E, F)) : ‖f.toSobolev E F s p‖ = ‖f.fourierMultiplierCLM F
     (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2))) |>.toLp p‖ := by
   simp [toSobolev_apply, ← Sobolev.norm_sobFn_eq]
@@ -447,8 +451,6 @@ theorem denseRange_toSobolev (hp : p ≠ ⊤) : DenseRange (toSobolev E F s p) :
     ring_nf
     simp
   · simp
-
--- dense range
 
 end SchwartzMap
 
@@ -713,10 +715,21 @@ variable {s' : ℝ}
 theorem mono_apply (h : s' ≤ s) (f : Sobolev E F s 2) : (f.mono E F s s').toDistr = f.toDistr := by
   simp [mono, h]
 
+theorem _root_.SchwartzMap.toSobolev_mono (f : 𝓢(E, F)) (s s' : ℝ) (hs : s' ≤ s) :
+    (f.toSobolev E F s 2).mono E F s s' = f.toSobolev E F s' 2 := by
+  ext
+  simp [mono_apply hs]
+
 theorem mono_injective (h : s' ≤ s) : Function.Injective (Sobolev.mono E F s s') := by
   intro f₁ f₂ hf
   ext u
   rw [← mono_apply h, ← mono_apply h, hf]
+
+theorem denseRange_mono (h : s' ≤ s) : DenseRange (Sobolev.mono E F s s') := by
+  suffices DenseRange (Sobolev.mono E F s s' ∘ SchwartzMap.toSobolev E F s 2) from this.of_comp
+  convert SchwartzMap.denseRange_toSobolev E F s' (p := 2) (by simp)
+  ext f : 1
+  simp [f.toSobolev_mono _ _ h]
 
 theorem mono_apply_eq_zero_of_lt (h : s < s') (f : Sobolev E F s 2) :
     (f.mono E F s s').toDistr = 0 := by
@@ -777,6 +790,11 @@ theorem laplacian_toDistr {s : ℝ} (f : Sobolev E F s 2) : (Δ f).toDistr = Δ 
   rw [← laplacian_apply, laplacian, smul_apply,
     toDistr_smul, fourierMultiplierCLM_toDistr,
     laplacian_eq_fourierMultiplierCLM]
+
+theorem laplacian_toSobolev (f : 𝓢(E, F)) :
+    (Δ f).toSobolev E F (s - 2) 2 = Δ (f.toSobolev E F s 2) := by
+  ext : 1
+  simp
 
 variable (E) in
 /-- Delta distribution -/
