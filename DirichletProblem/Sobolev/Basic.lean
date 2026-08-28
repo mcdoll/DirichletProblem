@@ -65,7 +65,7 @@ theorem coe_foo {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
 variable [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
   {p : ℝ≥0∞} [Fact (1 ≤ p)]
 
-/-- foo -/
+/-- important foo -/
 def foo' {g : E → ℂ} (s C : ℝ) (hg₁ : g.HasTemperateGrowth)
     (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ (s / 2)) :
     Lp F p (volume : Measure E) →L[ℂ] Lp F p (volume : Measure E) :=
@@ -172,11 +172,14 @@ theorem besselPotential_neg_sobFn_eq {f : Sobolev E F s p} :
     besselPotential E F (-s) f.sobFn = f.toDistr := by
   simp [← f.bessel_toDistr_eq_sobFn]
 
+theorem sobFn_eq_toDistr_of_eq_zero {f : Sobolev E F s p} (hs : s = 0) :
+    f.sobFn = f.toDistr := by
+  simp [← besselPotential_neg_sobFn_eq, hs]
+
 @[ext]
 theorem ext {f g : Sobolev E F s p} (h₁ : f.toDistr = g.toDistr) : f = g := by
   apply ext' h₁
-  apply_fun MeasureTheory.Lp.toTemperedDistribution; swap
-  · apply LinearMap.ker_eq_bot.mp MeasureTheory.Lp.ker_toTemperedDistributionCLM_eq_bot
+  apply MeasureTheory.Lp.toTemperedDistribution_injective
   calc
     f.sobFn = besselPotential E F s f.toDistr := f.bessel_toDistr_eq_sobFn.symm
     _ = besselPotential E F s g.toDistr := by congr

@@ -1,6 +1,8 @@
 import DirichletProblem.Mathlib.Analysis.Asymptotics.Lemmas
 import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Basic
 import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
+import DirichletProblem.Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
+import DirichletProblem.Mathlib.Analysis.Distribution.FourierMultiplier
 import DirichletProblem.Mathlib.Analysis.Distribution.Sobolev
 import DirichletProblem.Mathlib.Analysis.Distribution.Support
 import DirichletProblem.Mathlib.Analysis.Distribution.TemperedDistribution
@@ -13,4 +15,5 @@ import DirichletProblem.Sobolev.ClosedSubmodule
 import DirichletProblem.Sobolev.DenseEmbedding
 import DirichletProblem.Sobolev.Restrict
 import DirichletProblem.Sobolev.RestrictZero
+import DirichletProblem.Sobolev.SpectralTheoryLaplacian
 import DirichletProblem.Sobolev.SupportedIn

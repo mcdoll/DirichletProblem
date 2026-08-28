@@ -36,6 +36,24 @@ theorem smulLeftCLM_toTemperedDistribution {f : E → ℂ} (hf : f.HasTemperateG
 
 end MeasureTheory.Measure
 
+namespace MeasureTheory.Lp
+
+open scoped ENNReal TemperedDistribution
+
+variable [NormedAddCommGroup F] [NormedSpace ℂ F]
+variable [CompleteSpace F]
+
+variable [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E]
+variable [MeasurableSpace E] [BorelSpace E]
+
+variable (E F)
+theorem toTemperedDistribution_injective (p : ℝ≥0∞) (μ : Measure E := by volume_tac)
+    [Fact (1 ≤ p)] [μ.HasTemperateGrowth] [IsLocallyFiniteMeasure μ] :
+    Function.Injective (toTemperedDistribution (F := F) (p := p) (μ := μ)) :=
+  LinearMap.ker_eq_bot.mp MeasureTheory.Lp.ker_toTemperedDistributionCLM_eq_bot
+
+end MeasureTheory.Lp
+
 namespace MeasureTheory.LocallyIntegrable
 
 variable [NormedAddCommGroup E] [NormedAddCommGroup F] [NormedSpace ℝ E] [NormedSpace ℂ F]
