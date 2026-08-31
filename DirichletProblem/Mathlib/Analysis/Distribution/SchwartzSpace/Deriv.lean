@@ -18,57 +18,18 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
 variable [NormedAddCommGroup E] [NormedAddCommGroup F]
   [InnerProductSpace ℝ E]
   [InnerProductSpace 𝕜 F]
-  --[InnerProductSpace ℝ F] [InnerProductSpace 𝕜 F]
   [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
 
 open scoped InnerProductSpace SchwartzMap
 
 open MeasureTheory
 
-namespace SchwartzMap
-
 open scoped LineDeriv Laplacian
 
 variable {μ : Measure E} [μ.IsAddHaarMeasure]
 
-/-section Complex
-
-variable (F) in
-def innerRealₗ : F →ₗ[ℝ] F →ₗ[ℝ] ℂ :=
-  LinearMap.mk₂ ℝ (inner ℂ) ?_ ?_ ?_ ?_
-where finally
-  · simp [inner_add_left]
-  · intro c x y
-    simpa [RCLike.real_smul_eq_coe_mul] using inner_smul_left x y (c : ℂ)
-  · simp [inner_add_right]
-  · intro c x y
-    simpa [RCLike.real_smul_eq_coe_mul] using inner_smul_right x y (c : ℂ)
-
-@[simp]
-theorem innerRealₗ_apply (x y : F) : innerRealₗ F x y = inner ℂ x y := rfl
-
-variable (F) in
-def innerRealL : F →L[ℝ] F →L[ℝ] ℂ :=
-  LinearMap.mkContinuous₂ (innerRealₗ F) 1 (by simpa using norm_inner_le_norm)
-
-/-- Integration by parts of Schwartz functions for directional derivatives.
-
-Version for the inner product. -/
-theorem integral_inner_lineDerivOp_right_eq_neg_left (f : 𝓢(E, F)) (g : 𝓢(E, F)) (v : E) :
-    ∫ (x : E), ⟪f x, ∂_{v} g x⟫_ℂ ∂μ = -∫ (x : E), ⟪∂_{v} f x, g x⟫_ℂ ∂μ := by
-  apply integral_bilinear_lineDerivOp_right_eq_neg_left f g (innerRealL F) v
-
-/-- Integration by parts of Schwartz functions for the Laplacian.
-
-Version for the inner product. -/
-theorem integral_inner_laplacian_right_eq_left (f : 𝓢(E, F)) (g : 𝓢(E, F)) :
-    ∫ (x : E), ⟪f x, Δ g x⟫_ℂ ∂μ = ∫ (x : E), ⟪Δ f x, g x⟫_ℂ ∂μ := by
-  apply integral_bilinear_laplacian_right_eq_left f g (innerRealL F)
-
-
-end Complex-/
-
-local instance : InnerProductSpace ℝ F := InnerProductSpace.rclikeToReal 𝕜 F
+local instance InnerProductSpace.instRCLikeToReal : InnerProductSpace ℝ F :=
+  InnerProductSpace.rclikeToReal 𝕜 F
 
 variable (𝕜 F) in
 private def innerRealₗ : F →ₗ[ℝ] F →ₗ[ℝ] 𝕜 :=
@@ -92,6 +53,8 @@ private theorem innerRealₗ_apply (x y : F) : innerRealₗ 𝕜 F x y = inner �
 variable (𝕜 F) in
 private def innerRealL : F →L[ℝ] F →L[ℝ] 𝕜 :=
   LinearMap.mkContinuous₂ (innerRealₗ 𝕜 F) 1 (by simpa using norm_inner_le_norm)
+
+namespace SchwartzMap
 
 /-- Integration by parts of Schwartz functions for directional derivatives.
 

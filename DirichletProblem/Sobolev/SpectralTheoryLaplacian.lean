@@ -113,7 +113,7 @@ variable (E F) in
 def LinearPMap.laplacian : Lp (α := E) F 2 →ₗ.[ℂ] Lp (α := E) F 2 :=
   (ConcreteLinearPMap.laplacian E F).toLinearPMap
 
-/-- The Laplacian on `ℝ^n` is self-adjoint. -/
+/-- The Laplacian on `ℝ^n` is symmetric. -/
 theorem LinearPMap.isSymmetric_laplacian : IsSymmetric (LinearPMap.laplacian E F) := by
   apply isSymmetric_toLinearPMap
   intro x y
@@ -124,7 +124,6 @@ theorem LinearPMap.isSymmetric_laplacian : IsSymmetric (LinearPMap.laplacian E F
   | h f g =>
     simp only [ConcreteLinearPMap.laplacian_toFun_toSobolev,
       ConcreteLinearPMap.laplacian_emb_toSobolev, SchwartzMap.inner_toL2_toL2_eq]
-    -- actually missing
     apply (SchwartzMap.integral_inner_laplacian_right_eq_left f g).symm
 
 theorem LinearPMap.dense_domain_laplacian :
@@ -156,7 +155,7 @@ theorem Complex.iteratedDeriv_cpow_const (z : ℂ) (hz : z ∈ slitPlane) (k : �
 
 theorem Complex.iteratedDeriv_inv (z : ℂ) (hz : z ∈ slitPlane) (k : ℕ) :
     deriv^[k] (fun x : ℂ ↦ x⁻¹) z =
-      Polynomial.eval (-1) (descPochhammer ℂ k) * z ^ ( - 1 - (k : ℂ)) := by
+      Polynomial.eval (-1) (descPochhammer ℂ k) * z ^ (- 1 - (k : ℂ)) := by
   simp_rw [← cpow_neg_one, Complex.iteratedDeriv_cpow_const z hz]
 
 open scoped ContDiff
@@ -214,7 +213,9 @@ theorem hasTemperateGrowth_const_smul_I_inv (c : ℝ) (hc : c ≠ 0) :
         have hmn' : m ∈ Finset.range (n + 1) := by simpa using hmn
         apply Finset.single_le_sum (fun _ _ ↦ by positivity) hmn'
 
-def foobar (c C : ℝ) (f : E → ℝ) (hC : 0 < C) (hc : c ≠ 0) (hf : f.HasTemperateGrowth)
+/-- The operator with Fourier multiplier `(c • I + f x)⁻¹`. -/
+def Sobolev.defectOp (c C : ℝ) (f : E → ℝ) (hC : 0 < C) (hc : c ≠ 0) (hf : f.HasTemperateGrowth)
+    -- this condition is satisfied if either `s ≤ 0` or `f` is elliptic:
     (hf' : ∀ x, (1 + ‖x‖ ^ 2) ^ (s / 2) ≤ C * (1 + ‖f x‖))
     (u : Lp (α := E) F 2) : Sobolev E F s 2 :=
   Sobolev.fourierMultiplierCLM 0 s (2 * C * max 1 (|c|⁻¹)) (fun x ↦ (c • Complex.I + f x)⁻¹) ?_ ?_
@@ -226,10 +227,8 @@ where finally
     simp only [Complex.real_smul, norm_inv, zero_sub]
     have h_pos : 0 < ‖c * Complex.I + (f x)‖ := by
       rw [norm_pos_iff]
-      refine Complex.slitPlane_ne_zero ?_
-      -- might be useful somewhere else:
-      refine Complex.mem_slitPlane_iff.mpr ?_
-      simp [hc]
+      apply Complex.slitPlane_ne_zero
+      simp [Complex.mem_slitPlane_iff, hc]
     suffices (1 + ‖x‖ ^ 2) ^ (s / 2) ≤ (2 * C * max 1 (|c|⁻¹)) * ‖c * Complex.I + (f x)‖ by
       rw [neg_div 2 s]
       rw [Real.rpow_neg (by positivity) (s / 2)]
@@ -259,50 +258,41 @@ where finally
       _ = (2 * C * max 1 (|c|⁻¹)) * ‖c • Complex.I + f x‖ := by ring
 
 @[simp]
-theorem foobar_toDistr (c C : ℝ) (f : E → ℝ) (hC : 0 < C) (hc : c ≠ 0) (hf : f.HasTemperateGrowth)
-    (hf' : ∀ x, (1 + ‖x‖ ^ 2) ^ (s / 2) ≤ C * (1 + ‖f x‖))
-    (u : Lp (α := E) F 2) : (foobar c C f hC hc hf hf' u).toDistr =
+theorem Sobolev.defectOp_toDistr (c C : ℝ) (f : E → ℝ) (hC : 0 < C) (hc : c ≠ 0)
+    (hf : f.HasTemperateGrowth) (hf' : ∀ x, (1 + ‖x‖ ^ 2) ^ (s / 2) ≤ C * (1 + ‖f x‖))
+    (u : Lp (α := E) F 2) : (defectOp c C f hC hc hf hf' u).toDistr =
     (Lp.toTemperedDistribution u).fourierMultiplierCLM F (fun x ↦ (c • Complex.I + f x)⁻¹) := by
-  simp [foobar]
+  simp [defectOp]
 
 open Real
 
-def foobarLaplacian (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E) F 2) : Sobolev E F 2 2 :=
-  foobar c (max 1 ((2 * π) ^ 2)⁻¹) (fun x ↦ -(2 * π) ^ 2 * ‖x‖ ^ 2) ?_ hc ?_ ?_ u
+def Sobolev.defectOpLaplacian (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E) F 2) : Sobolev E F 2 2 :=
+  defectOp c 1 (fun x ↦ -(2 * π) ^ 2 * ‖x‖ ^ 2) ?_ hc ?_ ?_ u
 where finally
   · positivity
   · fun_prop
   · intro x
-    simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, div_self, rpow_one]
-    rw [mul_add]
-    gcongr
-    · simp
-    · have : 1 ≤ max 1 ((2 * π) ^ 2)⁻¹ * (2 * π) ^ 2 := by
-        -- this is a bit silly, because the max is always `1`, but proof is simpler currently
-        -- need some grind improvements
-        rw [sup_mul₀ (by positivity)]
-        refine le_sup_of_le_right ?_
-        simp
-      simp only [neg_mul, norm_neg, norm_mul, norm_pow, norm_ofNat, norm_eq_abs, ge_iff_le]
-      rw [abs_of_pos (by positivity)]
-      grw [← mul_assoc, ← this]
-      simp
+    suffices ‖x‖ ^ 2 ≤ (2 * |π|) ^ 2 * |‖x‖| ^ 2 by simpa
+    have : 1 ≤ (2 * π) ^ 2 := by
+      grind [one_le_sq_iff₀, two_le_pi]
+    grw [abs_of_pos (by positivity), ← this]
+    simp
 
 @[simp]
-theorem foobarLaplacian_toDistr (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E) F 2) :
-    (foobarLaplacian c hc u).toDistr = (Lp.toTemperedDistribution u).fourierMultiplierCLM F
+theorem Sobolev.defectOpLaplacian_toDistr (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E) F 2) :
+    (defectOpLaplacian c hc u).toDistr = (Lp.toTemperedDistribution u).fourierMultiplierCLM F
       (fun x ↦ (c • Complex.I - (2 * π) ^ 2 * ‖x‖ ^ 2)⁻¹) := by
-  simp [foobarLaplacian, ← sub_eq_add_neg]
+  simp [defectOpLaplacian, ← sub_eq_add_neg]
 
-theorem foobarLaplacian_prop (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E) F 2) :
-    ((c • Complex.I) • (ConcreteLinearPMap.laplacian E F).emb (foobarLaplacian c hc u) +
-      (ConcreteLinearPMap.laplacian E F).toFun (foobarLaplacian c hc u)) = u := by
+theorem Sobolev.defectOpLaplacian_prop (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E) F 2) :
+    ((c • Complex.I) • (ConcreteLinearPMap.laplacian E F).emb (defectOpLaplacian c hc u) +
+      (ConcreteLinearPMap.laplacian E F).toFun (defectOpLaplacian c hc u)) = u := by
   apply Lp.toTemperedDistribution_injective
   -- this should be a `calc` block
   simp_rw [← Lp.toTemperedDistributionCLM_apply]
   simp only [_root_.map_add, _root_.map_smul]
   simp only [Lp.toTemperedDistributionCLM_apply,
-    ConcreteLinearPMap.toTemperedDistribution_laplacian_emb, foobarLaplacian_toDistr,
+    ConcreteLinearPMap.toTemperedDistribution_laplacian_emb, defectOpLaplacian_toDistr,
     ConcreteLinearPMap.toTemperedDistribution_laplacian_toFun]
   rw [← _root_.smul_apply]
   have : Function.HasTemperateGrowth fun x : E ↦ ((c • Complex.I) - (2 * π) ^ 2 * ‖x‖ ^ 2)⁻¹ := by
@@ -331,35 +321,29 @@ theorem foobarLaplacian_prop (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E) F 2) :
   · infer_instance
 
 
+variable (E F) in
+theorem LinearPMap.const_I_vadd_laplacian_range_eq_top (c : ℝ) (hc : c ≠ 0 := by positivity) :
+    ((c • Complex.I • (LinearMap.id (R := ℂ) (M := Lp (α := E) F 2 volume))) +ᵥ
+      LinearPMap.laplacian E F).toFun.range = ⊤ := by
+  rw [Submodule.eq_top_iff']
+  intro u
+  simp only [vadd_domain, vadd_toFun, LinearMap.mem_range, LinearMap.add_apply,
+    LinearMap.coe_comp, LinearMap.coe_smul, LinearMap.id_coe, Submodule.coe_subtype,
+    Function.comp_apply, Pi.smul_apply, id_eq, toFun_eq_coe]
+  suffices ∃ f : Sobolev E F 2 2, c • Complex.I • ((ConcreteLinearPMap.laplacian E F).emb f) +
+      ((ConcreteLinearPMap.laplacian E F).toFun f) = u by
+    obtain ⟨f, hf⟩ := this
+    use ⟨(ConcreteLinearPMap.laplacian E F).emb f, by simp [laplacian]⟩
+    convert hf
+    apply ConcreteLinearPMap.toLinearPMap_apply
+  use Sobolev.defectOpLaplacian c hc u
+  simpa [← smul_assoc] using Sobolev.defectOpLaplacian_prop c hc u
+
 /-- The Laplacian on `ℝ^n` is self-adjoint. -/
 theorem LinearPMap.isSelfAdjoint_laplacian : IsSelfAdjoint (LinearPMap.laplacian E F) := by
   apply (isSelfAdjoint_tfae LinearPMap.isSymmetric_laplacian LinearPMap.dense_domain_laplacian
     |>.out 1 3).mpr
   -- first step: reduction to a `Lp` or distribution statement
   constructor
-  · rw [Submodule.eq_top_iff']
-    intro u
-    simp only [vadd_domain, vadd_toFun, LinearMap.mem_range, LinearMap.add_apply,
-      LinearMap.coe_comp, LinearMap.coe_smul, LinearMap.id_coe, Submodule.coe_subtype,
-      Function.comp_apply, Pi.smul_apply, id_eq, toFun_eq_coe]
-    suffices ∃ f : Sobolev E F 2 2, Complex.I • ((ConcreteLinearPMap.laplacian E F).emb f) +
-        ((ConcreteLinearPMap.laplacian E F).toFun f) = u by
-      obtain ⟨f, hf⟩ := this
-      use ⟨(ConcreteLinearPMap.laplacian E F).emb f, by simp [laplacian]⟩
-      convert hf
-      apply ConcreteLinearPMap.toLinearPMap_apply
-    use foobarLaplacian 1 (by simp) u
-    simpa using foobarLaplacian_prop 1 (by simp) u
-  · rw [Submodule.eq_top_iff']
-    intro u
-    simp only [vadd_domain, vadd_toFun, LinearMap.mem_range, LinearMap.add_apply,
-      LinearMap.coe_comp, LinearMap.coe_smul, LinearMap.id_coe, Submodule.coe_subtype,
-      Function.comp_apply, Pi.smul_apply, id_eq, toFun_eq_coe]
-    suffices ∃ f : Sobolev E F 2 2, (-Complex.I) • ((ConcreteLinearPMap.laplacian E F).emb f) +
-        ((ConcreteLinearPMap.laplacian E F).toFun f) = u by
-      obtain ⟨f, hf⟩ := this
-      use ⟨(ConcreteLinearPMap.laplacian E F).emb f, by simp [laplacian]⟩
-      convert hf
-      apply ConcreteLinearPMap.toLinearPMap_apply
-    use foobarLaplacian (-1) (by simp) u
-    simpa using foobarLaplacian_prop (-1) (by simp) u
+  · simpa using LinearPMap.const_I_vadd_laplacian_range_eq_top E F 1
+  · simpa using LinearPMap.const_I_vadd_laplacian_range_eq_top E F (-1)
