@@ -23,16 +23,22 @@ section Concrete
 
 section definition
 
+variable [RCLike 𝕜] [RCLike 𝕜₂]
+
+variable {σ : 𝕜 →+* 𝕜₂}
+
+
+variable {D E E' Eₗ F : Type*}
 variable [AddCommGroup D] [Module 𝕜 D]
 variable [AddCommGroup E] [Module 𝕜 E]
-variable [AddCommGroup F] [Module 𝕜 F]
+variable [AddCommGroup F] [Module 𝕜₂ F]
 
-variable (𝕜 D E F) in
+variable (σ D E F) in
 /-- A `ConcreteLinearPMap` is a tuple of a linear map `D →ₗ[𝕜] F` and a linear map `D →ₗ[𝕜] E`,
 where the later acts an embedding (and hence is assumed to be injective). -/
 structure ConcreteLinearPMap where
   /-- The underlying map -/
-  toFun : D →ₗ[𝕜] F
+  toFun : D →ₛₗ[σ] F
   /-- The embedding of the domain -/
   emb : D →ₗ[𝕜] E
   inj : Function.Injective emb
@@ -43,15 +49,18 @@ namespace ConcreteLinearPMap
 
 section LinearAlgebra
 
+variable [RCLike 𝕜₂]
+
 variable [AddCommGroup D] [Module 𝕜 D]
 variable [AddCommGroup E] [Module 𝕜 E]
-variable [AddCommGroup F] [Module 𝕜 F]
+variable [AddCommGroup F] [Module 𝕜₂ F]
+variable {σ : 𝕜 →+* 𝕜₂}
 
-variable {f : ConcreteLinearPMap 𝕜 D E F}
+variable {f : ConcreteLinearPMap σ D E F}
 
 variable (f) in
 /-- Define an unbounded operator from a linear operator and an embedding. -/
-def toLinearPMap : E →ₗ.[𝕜] F where
+def toLinearPMap : E →ₛₗ.[σ] F where
   domain := f.emb.range
   toFun := f.emb.ker |>.liftQ f.toFun ?_ |>.comp f.emb.quotKerEquivRange.symm.toLinearMap
 where finally
@@ -94,13 +103,13 @@ end ConcreteLinearPMap
 end Concrete
 
 
+namespace LinearPMap
+
 variable [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 variable [NormedAddCommGroup E'] [InnerProductSpace ℂ E'] [CompleteSpace E']
 variable [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
 open scoped InnerProductSpace
-
-namespace LinearPMap
 
 /-- A linear map is symmetric if it is its own formal adjoint. -/
 def IsSymmetric (T : E →ₗ.[𝕜] E) : Prop :=
@@ -135,7 +144,7 @@ theorem isClosed_iff_seq : T.IsClosed ↔ ∀ (a : ℕ → T.domain) (a₀ : E) 
 section Concrete
 
 variable [AddCommGroup D] [Module 𝕜 D]
-variable {f : ConcreteLinearPMap 𝕜 D E E}
+variable {f : ConcreteLinearPMap (RingHom.id 𝕜) D E E}
 
 theorem isSymmetric_toLinearPMap (h : ∀ x y : D, ⟪f.toFun x, f.emb y⟫_𝕜 = ⟪f.emb x, f.toFun y⟫_𝕜) :
     IsSymmetric f.toLinearPMap := by
@@ -155,6 +164,13 @@ theorem IsClosed.closure_eq (hT : T.IsClosed) : T.closure = T := by
 theorem mem_range_iff' {f : E →ₗ.[𝕜] E} {y : E} :
     y ∈ f.toFun.range ↔ ∃ x : E, (x, y) ∈ f.graph := by
   exact LinearPMap.mem_range_iff
+
+theorem _root_.LinearMap.isClosed_toLinearPMap {g : E →ₗ[𝕜] E} (hg : Continuous g) :
+    (g.toPMap ⊤).IsClosed := by
+  rw [isClosed_iff_seq] at ⊢
+  intro a a₀ y₀ ha₀ hy₀
+  suffices g a₀ = y₀ by simp [this]
+  exact tendsto_nhds_unique ((hg.tendsto a₀).comp ha₀) hy₀
 
 theorem IsClosed.vadd' {f : E →ₗ.[𝕜] E} (hf : f.IsClosed) {g : E →ₗ[𝕜] E} (hg : Continuous g) :
     (g +ᵥ f).IsClosed := by
@@ -202,6 +218,13 @@ theorem IsSymmetric.le_adjoint (hT : T.IsSymmetric) (hT' : Dense (T.domain : Set
     intro x'
     rw [← hxy]
     apply hT
+
+
+theorem IsSymmetric.isClosable (hT : T.IsSymmetric) (hT' : Dense (T.domain : Set E)) :
+    T.IsClosable := by
+  rw [isClosable_iff_exists_closed_extension]
+  use T†
+  exact ⟨adjoint_isClosed hT', le_adjoint hT hT'⟩
 
 theorem IsSymmetric.isSelfAdjoint_of_le_domain (hT : T.IsSymmetric) (hT' : Dense (T.domain : Set E))
     (hT'' : T†.domain ≤ T.domain) : IsSelfAdjoint T := by
@@ -312,20 +335,19 @@ theorem IsSymmetric.ker_const_smul_im_eq_bot {T : E' →ₗ.[ℂ] E'} (hT : IsSy
     LinearMap.id_coe, Submodule.coe_subtype, Pi.add_apply, Function.comp_apply, Pi.smul_apply,
     id_eq] at hx'
   simp only [vadd_domain, Submodule.mk_eq_zero]
-  have : (c • I) * inner ℂ x x = (c • I) * (- inner ℂ x x) := by
-    have : T ⟨x, hx⟩ = -((c • I) • x) := by
-      rw [← add_eq_zero_iff_eq_neg', hx']
-    calc
-      _ = inner ℂ (T ⟨x, hx⟩) x := by
-        simp [this, inner_smul_left]
-      _ = inner ℂ x (T ⟨x, hx⟩) := by
-        exact hT ⟨x, hx⟩ ⟨x, hx⟩
-      _ = _ := by
-        simp [this, inner_smul_right]
-  have : inner ℂ x x = 0 := by
+  suffices ⟪x, x⟫_ℂ = 0 by grind [inner_self_eq_zero]
+  suffices (c • I) * ⟪x, x⟫_ℂ = (c • I) * (- ⟪x, x⟫_ℂ) by
     rw [← neg_eq_self]
     exact (mul_left_cancel₀ (by simp [hc]) this).symm
-  grind [inner_self_eq_zero]
+  have : T ⟨x, hx⟩ = -((c • I) • x) := by
+    rw [← add_eq_zero_iff_eq_neg', hx']
+  calc
+    _ = ⟪T ⟨x, hx⟩, x⟫_ℂ := by
+      simp [this, inner_smul_left]
+    _ = ⟪x, T ⟨x, hx⟩⟫_ℂ :=
+      hT ⟨x, hx⟩ ⟨x, hx⟩
+    _ = _ := by
+      simp [this, inner_smul_right]
 
 omit [CompleteSpace E'] in
 @[simp]
@@ -358,9 +380,8 @@ theorem adjoint_id_vadd {T : E' →ₗ.[ℂ] E'} (hT : Dense (T.domain : Set E')
       simpa [inner_add_left, inner_smul_left, inner_add_right, inner_smul_right] using
         adjoint_isFormalAdjoint hT ⟨x, hg⟩ ⟨y, hy⟩
 
-theorem adjoint_vadd {T : E' →ₗ.[ℂ] E'} (S : E' →L[ℂ] E') :
-    (S.toLinearMap +ᵥ T)† = S.adjoint.toLinearMap +ᵥ T† := by
-  sorry
+proof_wanted adjoint_vadd {T : E' →ₗ.[ℂ] E'} (S : E' →L[ℂ] E') :
+    (S.toLinearMap +ᵥ T)† = S.adjoint.toLinearMap +ᵥ T†
 
 omit [CompleteSpace E'] in
 theorem mem_range_orthogonal_iff {T : E' →ₗ.[ℂ] E'} {x : E'} :
@@ -393,13 +414,14 @@ theorem mem_range_orthogonal_iff' {T : E' →ₗ.[ℂ] E'}
       simp [h]
 
 theorem ker_adjoint_eq_bot_iff {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : Set E')) :
-    (T†).ker = ⊥ ↔ Dense (T.toFun.range : Set E') := by
-  rw [ker_eq_bot']
-  rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff]
-  rw [Submodule.eq_bot_iff]
-  simp only [Subtype.forall, Submodule.mk_eq_zero]
-  congrm (∀ x, ?_)
-  grind [mem_adjoint_domain_of_mem_range_orthogonal, mem_range_orthogonal_iff']
+    (T†).ker = ⊥ ↔ Dense (T.toFun.range : Set E') := calc
+  _ ↔ (∀ (a : E') (b : a ∈ T†.domain), T† ⟨a, b⟩ = 0 → a = 0) := by simp [ker_eq_bot']
+  _ ↔ ∀ x ∈ T.toFun.rangeᗮ, x = 0 := by
+    congrm (∀ x, ?_)
+    grind [mem_adjoint_domain_of_mem_range_orthogonal, mem_range_orthogonal_iff']
+  _ ↔ _ := by
+    rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
+      Submodule.eq_bot_iff]
 
 theorem ker_smul_id_vadd_iff {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : Set E')) (c : ℝ) :
     (((c * I) • LinearMap.id (R := ℂ) (M := E')) +ᵥ T†).ker = ⊥ ↔
@@ -409,25 +431,20 @@ theorem ker_smul_id_vadd_iff {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : S
   rw [adjoint_id_vadd hT']
   simp
 
-theorem ker_I_vadd_iff {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : Set E')) :
-    ((I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T†).ker = ⊥ ↔
-    Dense (LinearMap.range ((-I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T).toFun : Set E') := by
-  have := ker_smul_id_vadd_iff hT' 1
-  simp only [Complex.ofReal_one, one_mul] at this
-  rw [this]
-  congrm (Dense ?_)
+theorem range_smul_id_vadd_eq_top {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
+    (hT' : Dense (T.domain : Set E')) (hT'' : T.IsClosed) {c : ℝ} (hc : c ≠ 0)
+    (h : (((c * Complex.I) • LinearMap.id (R := ℂ) (M := E')) +ᵥ T†).ker = ⊥) :
+    ((-(c * Complex.I) • LinearMap.id (R := ℂ) (M := E')) +ᵥ T).toFun.range = ⊤ := by
+  rwa [ker_smul_id_vadd_iff hT', Submodule.dense_iff_topologicalClosure_eq_top,
+    IsClosed.submodule_topologicalClosure_eq] at h
+  convert! isClosed_range_smul_id_vadd hT hT'' (c := -c) (by simpa) using 4
   simp
-
-theorem ker_neg_I_vadd_iff {T : E' →ₗ.[ℂ] E'} (hT' : Dense (T.domain : Set E')) :
-    (-(I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T†).ker = ⊥ ↔
-    Dense (LinearMap.range ((I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T).toFun : Set E') := by
-  convert! ker_smul_id_vadd_iff hT' (-1) using 4
-  · simp
-  · simp
 
 theorem isSelfAdjoint_tfae {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
     (hT' : Dense (T.domain : Set E')) : List.TFAE [
     IsSelfAdjoint T,
+    T.IsClosed ∧ ∀ c : ℝ, c ≠ 0 → (((c * I) • LinearMap.id (R := ℂ) (M := E')) +ᵥ T†).ker = ⊥,
+    ∀ c : ℝ, c ≠ 0 → LinearMap.range (((c * I) • LinearMap.id (R := ℂ) (M := E')) +ᵥ T).toFun = ⊤,
     T.IsClosed ∧ ((I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T†).ker = ⊥ ∧
       (-(I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T†).ker = ⊥,
     LinearMap.range ((I • LinearMap.id (R := ℂ) (M := E')) +ᵥ T).toFun = ⊤ ∧
@@ -437,21 +454,27 @@ theorem isSelfAdjoint_tfae {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
     have : T†.IsSymmetric := by
       rw [IsSelfAdjoint.adjoint_eq hT]
       apply IsSelfAdjoint.isSymmetric hT
-    refine ⟨hT.isClosed, ?_, ?_⟩
-    · simpa using IsSymmetric.ker_const_smul_im_eq_bot this (c := 1) (by simp)
-    · simpa using IsSymmetric.ker_const_smul_im_eq_bot this (c := -1) (by simp)
+    refine ⟨hT.isClosed, fun c hc ↦ ?_⟩
+    simpa using this.ker_const_smul_im_eq_bot hc
   tfae_have 2 → 3 := by
+    intro ⟨h₁, h₂⟩ c hc
+    simpa using range_smul_id_vadd_eq_top hT hT' h₁ (c := -c) (by simpa) (h₂ (c := -c) (by simpa))
+  tfae_have 2 → 4 := by
+    intro ⟨h₁, h₂⟩
+    refine ⟨h₁, ?_, ?_⟩
+    · simpa using h₂ 1 (by simp)
+    · simpa using h₂ (-1) (by simp)
+  tfae_have 3 → 5 := by
+    intro h
+    constructor
+    · simpa using h 1 (by simp)
+    · simpa using h (-1) (by simp)
+  tfae_have 4 → 5 := by
     intro ⟨h₁, h₂, h₃⟩
     constructor
-    · rwa [ker_neg_I_vadd_iff hT', Submodule.dense_iff_topologicalClosure_eq_top,
-        IsClosed.submodule_topologicalClosure_eq] at h₃
-      convert! isClosed_range_smul_id_vadd hT h₁ (c := 1) (by simp) using 4
-      simp
-    · rwa [ker_I_vadd_iff hT', Submodule.dense_iff_topologicalClosure_eq_top,
-        IsClosed.submodule_topologicalClosure_eq] at h₂
-      convert! isClosed_range_smul_id_vadd hT h₁ (c := -1) (by simp) using 4
-      simp
-  tfae_have 3 → 1 := by
+    · simpa using range_smul_id_vadd_eq_top hT hT' h₁ (c := -1) (by simp) (by simpa)
+    · simpa using range_smul_id_vadd_eq_top hT hT' h₁ (c := 1) (by simp) (by simpa)
+  tfae_have 5 → 1 := by
     intro ⟨h₁, h₂⟩
     apply hT.isSelfAdjoint_of_le_domain hT'
     intro x hx
@@ -464,8 +487,11 @@ theorem isSelfAdjoint_tfae {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
     have hy₁ : y ∈ T†.domain := (hT.le_adjoint hT').1 hy
     -- The crucial step is that `T† - i` is injective
     have h_ker : (-Complex.I • LinearMap.id (R := ℂ) (M := E') +ᵥ T†).ker = ⊥ := by
-      rw [neg_smul, ker_neg_I_vadd_iff hT', h₁]
-      simp
+      have := ker_smul_id_vadd_iff hT' (-1)
+      simp only [Complex.ofReal_neg, Complex.ofReal_one, neg_mul, one_mul, neg_smul] at this
+      rw [neg_smul, this]
+      simp at ⊢ h₁
+      simp [h₁]
     have hy' : (-Complex.I • LinearMap.id (R := ℂ) (M := E') +ᵥ T†) ⟨y, by simp [hy₁]⟩ =
         (-Complex.I • LinearMap.id (R := ℂ) (M := E') +ᵥ T†) ⟨x, hx⟩ := by
       have := (hT.le_adjoint hT').2 (x := ⟨y, hy⟩) (y := ⟨y, hy₁⟩) rfl
@@ -475,4 +501,40 @@ theorem isSelfAdjoint_tfae {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
     exact hy'.symm
   tfae_finish
 
+theorem isSelfAdjoint_of_surjective {T : E' →ₗ.[ℂ] E'} (hT : T.IsSymmetric)
+    (hT' : Dense (T.domain : Set E')) (h : ∀ f (c : ℝ), c ≠ 0 → ∃ y, c • Complex.I • ↑y + T y = f) :
+    IsSelfAdjoint T := by
+  apply (isSelfAdjoint_tfae hT hT' |>.out 1 3).mpr
+  intro c hc
+  rw [Submodule.eq_top_iff']
+  intro f
+  simpa [← smul_assoc] using h f c hc
+
+section Concrete
+
+end Concrete
+
 end LinearPMap
+
+namespace ConcreteLinearPMap
+
+variable [AddCommGroup D] [Module ℂ D]
+variable [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
+
+variable {f : ConcreteLinearPMap (RingHom.id ℂ) D E E}
+
+theorem isSelfAdjoint_toLinearPMap_of_surjective (hf : f.toLinearPMap.IsSymmetric)
+    (hf' : DenseRange f.emb)
+    (h : ∀ y (c : ℝ), c ≠ 0 → ∃ x : D, c • Complex.I • f.emb x + f.toFun x = y) :
+    IsSelfAdjoint f.toLinearPMap := by
+  apply isSelfAdjoint_of_surjective hf hf'
+  intro x c hc
+  obtain ⟨y, hy⟩ := h x c hc
+  use ⟨f.emb y, by simp⟩
+  convert hy
+  apply ConcreteLinearPMap.toLinearPMap_apply
+
+
+variable [AddCommGroup D] [Module 𝕜 D]
+
+end ConcreteLinearPMap

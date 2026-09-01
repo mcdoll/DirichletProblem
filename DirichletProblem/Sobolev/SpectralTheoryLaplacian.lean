@@ -54,7 +54,7 @@ variable (f : Sobolev E F s 2)
 variable (E F) in
 /-- The Laplacian as a unbounded operator. -/
 def ConcreteLinearPMap.laplacian :
-    ConcreteLinearPMap ℂ (Sobolev E F 2 2) (Lp (α := E) F 2) (Lp (α := E) F 2) where
+    ConcreteLinearPMap (RingHom.id ℂ) (Sobolev E F 2 2) (Lp (α := E) F 2) (Lp (α := E) F 2) where
   toFun := (Sobolev.toLpₗ E F (2 - 2) 2) ∘ₗ (Sobolev.laplacian E F 2).toLinearMap
   emb := (Sobolev.toLpₗ E F 0 2) ∘ₗ (Sobolev.mono E F 2 0).toLinearMap
   inj := by
@@ -126,9 +126,8 @@ theorem LinearPMap.isSymmetric_laplacian : IsSymmetric (LinearPMap.laplacian E F
       ConcreteLinearPMap.laplacian_emb_toSobolev, SchwartzMap.inner_toL2_toL2_eq]
     apply (SchwartzMap.integral_inner_laplacian_right_eq_left f g).symm
 
-theorem LinearPMap.dense_domain_laplacian :
-    Dense ((laplacian E F).domain : Set (Lp (α := E) F 2)) := by
-  apply (ConcreteLinearPMap.dense_domain_toLinearPMap_iff _).mpr
+theorem ConcreteLinearPMap.denseRange_laplacian :
+    DenseRange (ConcreteLinearPMap.laplacian E F).emb := by
   apply (Sobolev.toLpₗᵢ E F 0 2).surjective.denseRange.comp _ (by fun_prop)
   exact Sobolev.denseRange_mono (by simp)
 
@@ -320,30 +319,10 @@ theorem Sobolev.defectOpLaplacian_prop (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E
   · simp
   · infer_instance
 
-
-variable (E F) in
-theorem LinearPMap.const_I_vadd_laplacian_range_eq_top (c : ℝ) (hc : c ≠ 0 := by positivity) :
-    ((c • Complex.I • (LinearMap.id (R := ℂ) (M := Lp (α := E) F 2 volume))) +ᵥ
-      LinearPMap.laplacian E F).toFun.range = ⊤ := by
-  rw [Submodule.eq_top_iff']
-  intro u
-  simp only [vadd_domain, vadd_toFun, LinearMap.mem_range, LinearMap.add_apply,
-    LinearMap.coe_comp, LinearMap.coe_smul, LinearMap.id_coe, Submodule.coe_subtype,
-    Function.comp_apply, Pi.smul_apply, id_eq, toFun_eq_coe]
-  suffices ∃ f : Sobolev E F 2 2, c • Complex.I • ((ConcreteLinearPMap.laplacian E F).emb f) +
-      ((ConcreteLinearPMap.laplacian E F).toFun f) = u by
-    obtain ⟨f, hf⟩ := this
-    use ⟨(ConcreteLinearPMap.laplacian E F).emb f, by simp [laplacian]⟩
-    convert hf
-    apply ConcreteLinearPMap.toLinearPMap_apply
+/-- The Laplacian on `ℝ^n` is self-adjoint. -/
+theorem LinearPMap.isSelfAdjoint_laplacian' : IsSelfAdjoint (LinearPMap.laplacian E F) := by
+  apply ConcreteLinearPMap.isSelfAdjoint_toLinearPMap_of_surjective LinearPMap.isSymmetric_laplacian
+    ConcreteLinearPMap.denseRange_laplacian
+  intro u c hc
   use Sobolev.defectOpLaplacian c hc u
   simpa [← smul_assoc] using Sobolev.defectOpLaplacian_prop c hc u
-
-/-- The Laplacian on `ℝ^n` is self-adjoint. -/
-theorem LinearPMap.isSelfAdjoint_laplacian : IsSelfAdjoint (LinearPMap.laplacian E F) := by
-  apply (isSelfAdjoint_tfae LinearPMap.isSymmetric_laplacian LinearPMap.dense_domain_laplacian
-    |>.out 1 3).mpr
-  -- first step: reduction to a `Lp` or distribution statement
-  constructor
-  · simpa using LinearPMap.const_I_vadd_laplacian_range_eq_top E F 1
-  · simpa using LinearPMap.const_I_vadd_laplacian_range_eq_top E F (-1)
