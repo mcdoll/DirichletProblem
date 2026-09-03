@@ -22,7 +22,7 @@ rev = "v4.34.0-rc2"
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.34.0-rc2"
+rev = "d9f6d1887c233aeabd725c175bd2ceca6215452a"
 
 [[lean_lib]]
 name = "DirichletProblem"

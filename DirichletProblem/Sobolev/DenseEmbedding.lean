@@ -262,8 +262,8 @@ theorem continuous_iff_isBounded (hp : WithSeminorms p) (hq : WithSeminorms q) :
     Continuous f ↔ Seminorm.IsBounded p q f := by
   constructor
   · intro h i
-    have := hq.topologicalAddGroup
-    have := hp.topologicalAddGroup
+    have := hq.isTopologicalAddGroup
+    have := hp.isTopologicalAddGroup
     rw [hq.continuous_iff_continuous_comp] at h
     obtain ⟨s, C, _, h⟩ := ((q i).comp f).bound_of_continuous hp (h i)
     exact ⟨s, C, h⟩
@@ -273,8 +273,8 @@ theorem WithSeminorms.continuous_iff_isBoundedBy (hp : WithSeminorms p) (hq : Wi
     Continuous f ↔ (q.comp f).IsBoundedBy p := by
   constructor
   · intro h i
-    have := hq.topologicalAddGroup
-    have := hp.topologicalAddGroup
+    have := hq.isTopologicalAddGroup
+    have := hp.isTopologicalAddGroup
     rw [hq.continuous_iff_continuous_comp] at h
     obtain ⟨s, C, _, h⟩ := ((q i).comp f).bound_of_continuous hp (h i)
     exact ⟨s, C, h⟩

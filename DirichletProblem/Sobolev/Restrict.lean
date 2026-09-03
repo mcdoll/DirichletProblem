@@ -9,7 +9,6 @@ public import Mathlib.Analysis.Distribution.Distribution
 public import DirichletProblem.Mathlib.Analysis.Distribution.Sobolev
 public import DirichletProblem.Sobolev.SupportedIn
 public import Mathlib.Analysis.Distribution.Support
-public import DirichletProblem.Sobolev.ClosedSubmodule
 
 /-! # Sobolev spaces on domains via restriction
 
