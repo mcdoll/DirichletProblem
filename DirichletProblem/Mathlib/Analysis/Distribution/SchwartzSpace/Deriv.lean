@@ -38,14 +38,11 @@ where finally
   · simp [inner_add_left]
   · intro c x y
     convert inner_smul_left x y (c : 𝕜)
-    · rfl
     · rw [RCLike.conj_ofReal]
       rfl
   · simp [inner_add_right]
   · intro c x y
-    convert inner_smul_right x y (c : 𝕜)
-    · rfl
-    · rfl
+    exact inner_smul_right x y (c : 𝕜)
 
 @[simp]
 private theorem innerRealₗ_apply (x y : F) : innerRealₗ 𝕜 F x y = inner 𝕜 x y := rfl

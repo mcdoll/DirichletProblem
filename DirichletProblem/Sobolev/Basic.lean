@@ -158,26 +158,31 @@ structure Sobolev (s : ℝ) (p : ℝ≥0∞) [hp : Fact (1 ≤ p)] where
 
 namespace Sobolev
 
+@[inherit_doc] scoped notation "H^{" s ", " p "}(" E ", " F ")" => Sobolev E F s p
+@[inherit_doc] scoped notation "H^{" s ", " p "}(" E ")" => Sobolev E ℂ s p
+@[inherit_doc] scoped notation "H^{" s "}(" E ", " F ")" => Sobolev E F s 2
+@[inherit_doc] scoped notation "H^{" s "}(" E ")" => Sobolev E ℂ s 2
+
 variable {s s' : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
 
-theorem ext' {f g : Sobolev E F s p}
+theorem ext' {f g : H^{s, p}(E, F)}
     (h₁ : f.toDistr = g.toDistr) (h₂ : f.sobFn = g.sobFn) : f = g := by
   cases f; cases g; congr
 
-theorem memSobolev_toDistr (f : Sobolev E F s p) : MemSobolev s p f.toDistr :=
+theorem memSobolev_toDistr (f : H^{s, p}(E, F)) : MemSobolev s p f.toDistr :=
   ⟨f.sobFn, f.bessel_toDistr_eq_sobFn⟩
 
 @[simp]
-theorem besselPotential_neg_sobFn_eq {f : Sobolev E F s p} :
+theorem besselPotential_neg_sobFn_eq {f : H^{s, p}(E, F)} :
     besselPotential E F (-s) f.sobFn = f.toDistr := by
   simp [← f.bessel_toDistr_eq_sobFn]
 
-theorem sobFn_eq_toDistr_of_eq_zero {f : Sobolev E F s p} (hs : s = 0) :
+theorem sobFn_eq_toDistr_of_eq_zero {f : H^{s, p}(E, F)} (hs : s = 0) :
     f.sobFn = f.toDistr := by
   simp [← besselPotential_neg_sobFn_eq, hs]
 
 @[ext]
-theorem ext {f g : Sobolev E F s p} (h₁ : f.toDistr = g.toDistr) : f = g := by
+theorem ext {f g : H^{s, p}(E, F)} (h₁ : f.toDistr = g.toDistr) : f = g := by
   apply ext' h₁
   apply MeasureTheory.Lp.toTemperedDistribution_injective
   calc
@@ -186,7 +191,7 @@ theorem ext {f g : Sobolev E F s p} (h₁ : f.toDistr = g.toDistr) : f = g := by
     _ = g.sobFn := g.bessel_toDistr_eq_sobFn
 
 /-- Transfer a Sobolev function in `H^{s,p}` to `H^{s', p}` given that `s = s'`. -/
-def copy (hs : s = s') (f : Sobolev E F s p) : Sobolev E F s' p where
+def copy (f : H^{s, p}(E, F)) (s' : ℝ) (hs : s = s' := by grind) : H^{s', p}(E, F) where
   toDistr := f.toDistr
   sobFn := f.sobFn
   bessel_toDistr_eq_sobFn := by
@@ -194,12 +199,12 @@ def copy (hs : s = s') (f : Sobolev E F s p) : Sobolev E F s' p where
     exact f.bessel_toDistr_eq_sobFn
 
 @[simp]
-theorem toDistr_copy (f : Sobolev E F s p) (hs : s = s') :
-  (f.copy hs).toDistr = f.toDistr := rfl
+theorem toDistr_copy (f : H^{s, p}(E, F)) (hs : s = s') :
+  (f.copy s').toDistr = f.toDistr := rfl
 
 @[simp]
-theorem sobFn_copy (f : Sobolev E F s p) (hs : s = s') :
-  (f.copy hs).sobFn = f.sobFn := rfl
+theorem sobFn_copy (f : H^{s, p}(E, F)) (hs : s = s') :
+  (f.copy s').sobFn = f.sobFn := rfl
 
 variable (E F s p) in
 theorem injective_sobFn :
@@ -211,19 +216,19 @@ theorem injective_sobFn :
     _ = besselPotential E F (-s) (Sobolev.sobFn g) := by congr
     _ = g.toDistr := by simp
 
-instance instZero : Zero (Sobolev E F s p) where
+instance instZero : Zero (H^{s, p}(E, F)) where
   zero := {
     toDistr := 0
     sobFn := 0
     bessel_toDistr_eq_sobFn := by simp [← Lp.toTemperedDistributionCLM_apply] }
 
 @[simp]
-theorem toDistr_zero : (0 : Sobolev E F s p).toDistr = 0 := rfl
+theorem toDistr_zero : (0 : H^{s, p}(E, F)).toDistr = 0 := rfl
 
 @[simp]
-theorem sobFn_zero : (0 : Sobolev E F s p).sobFn = 0 := rfl
+theorem sobFn_zero : (0 : H^{s, p}(E, F)).sobFn = 0 := rfl
 
-instance instAdd : Add (Sobolev E F s p) where
+instance instAdd : Add (H^{s, p}(E, F)) where
   add f g := {
     toDistr := f.toDistr + g.toDistr
     sobFn := f.sobFn + g.sobFn
@@ -231,12 +236,12 @@ instance instAdd : Add (Sobolev E F s p) where
       f.bessel_toDistr_eq_sobFn, g.bessel_toDistr_eq_sobFn] }
 
 @[simp]
-theorem toDistr_add (f g : Sobolev E F s p) : (f + g).toDistr = f.toDistr + g.toDistr := rfl
+theorem toDistr_add (f g : H^{s, p}(E, F)) : (f + g).toDistr = f.toDistr + g.toDistr := rfl
 
 @[simp]
-theorem sobFn_add (f g : Sobolev E F s p) : (f + g).sobFn = f.sobFn + g.sobFn := rfl
+theorem sobFn_add (f g : H^{s, p}(E, F)) : (f + g).sobFn = f.sobFn + g.sobFn := rfl
 
-instance instSub : Sub (Sobolev E F s p) where
+instance instSub : Sub (H^{s, p}(E, F)) where
   sub f g := {
     toDistr := f.toDistr - g.toDistr
     sobFn := f.sobFn - g.sobFn
@@ -244,12 +249,12 @@ instance instSub : Sub (Sobolev E F s p) where
       f.bessel_toDistr_eq_sobFn, g.bessel_toDistr_eq_sobFn] }
 
 @[simp]
-theorem toDistr_sub (f g : Sobolev E F s p) : (f - g).toDistr = f.toDistr - g.toDistr := rfl
+theorem toDistr_sub (f g : H^{s, p}(E, F)) : (f - g).toDistr = f.toDistr - g.toDistr := rfl
 
 @[simp]
-theorem sobFn_sub (f g : Sobolev E F s p) : (f - g).sobFn = f.sobFn - g.sobFn := rfl
+theorem sobFn_sub (f g : H^{s, p}(E, F)) : (f - g).sobFn = f.sobFn - g.sobFn := rfl
 
-instance instNeg : Neg (Sobolev E F s p) where
+instance instNeg : Neg (H^{s, p}(E, F)) where
   neg f := {
     toDistr := -f.toDistr
     sobFn := -f.sobFn
@@ -257,16 +262,16 @@ instance instNeg : Neg (Sobolev E F s p) where
       simp [← Lp.toTemperedDistributionCLM_apply, map_neg, f.bessel_toDistr_eq_sobFn] }
 
 @[simp]
-theorem toDistr_neg (f : Sobolev E F s p) : (-f).toDistr = -f.toDistr := rfl
+theorem toDistr_neg (f : H^{s, p}(E, F)) : (-f).toDistr = -f.toDistr := rfl
 
 @[simp]
-theorem sobFn_neg (f : Sobolev E F s p) : (-f).sobFn = -f.sobFn := rfl
+theorem sobFn_neg (f : H^{s, p}(E, F)) : (-f).sobFn = -f.sobFn := rfl
 
 variable {R : Type*} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
   [SMul R ℂ] [SMul R 𝓢'(E, F)] [SMul R (Lp F p (μ := (volume : Measure E)))]
   [IsScalarTower R ℂ 𝓢'(E, F)] [IsScalarTower R ℂ (Lp F p (μ := (volume : Measure E)))]
 
-instance instSMul : SMul R (Sobolev E F s p) where
+instance instSMul : SMul R (H^{s, p}(E, F)) where
   smul c f := {
     toDistr := c • f.toDistr
     sobFn := c • f.sobFn
@@ -274,18 +279,18 @@ instance instSMul : SMul R (Sobolev E F s p) where
       simp [← Lp.toTemperedDistributionCLM_apply, f.bessel_toDistr_eq_sobFn] }
 
 @[simp]
-theorem toDistr_smul (c : R) (f : Sobolev E F s p) : (c • f).toDistr = c • f.toDistr := rfl
+theorem toDistr_smul (c : R) (f : H^{s, p}(E, F)) : (c • f).toDistr = c • f.toDistr := rfl
 
 @[simp]
-theorem sobFn_smul (c : R) (f : Sobolev E F s p) : (c • f).sobFn = c • f.sobFn := rfl
+theorem sobFn_smul (c : R) (f : H^{s, p}(E, F)) : (c • f).sobFn = c • f.sobFn := rfl
 
-instance instAddCommGroup : AddCommGroup (Sobolev E F s p) :=
+instance instAddCommGroup : AddCommGroup (H^{s, p}(E, F)) :=
   (injective_sobFn E F s p).addCommGroup _ rfl (fun _ _ => rfl) (fun _ => rfl) (fun _ _ => rfl)
     (fun _ _ => rfl) fun _ _ => rfl
 
 variable (E F s p) in
 /-- Coercion as an additive homomorphism. -/
-def coeHom : Sobolev E F s p →+ 𝓢'(E, F) where
+def coeHom : H^{s, p}(E, F) →+ 𝓢'(E, F) where
   toFun f := f.toDistr
   map_zero' := rfl
   map_add' _ _ := rfl
@@ -293,7 +298,7 @@ def coeHom : Sobolev E F s p →+ 𝓢'(E, F) where
 theorem coeHom_injective : Function.Injective (coeHom E F s p) := by
   apply ext
 
-instance instModule : Module ℂ (Sobolev E F s p) :=
+instance instModule : Module ℂ (H^{s, p}(E, F)) :=
   coeHom_injective.module ℂ (coeHom E F s p) fun _ _ => rfl
 
 variable (E F s p) in
@@ -301,14 +306,14 @@ variable (E F s p) in
 
 This definition is mainly used to define the norm and inner product on `H ^ {s,p}` and `H ^ s`,
 respectively. -/
-def toLpₗ : Sobolev E F s p →ₗ[ℂ] Lp F p (volume : Measure E) where
+def toLpₗ : H^{s, p}(E, F) →ₗ[ℂ] Lp F p (volume : Measure E) where
   toFun := sobFn
   map_add' f g := by rfl
   map_smul' c f := by rfl
 
 variable (s) in
 /-- Define the Sobolev function `𝓕⁻ (1 + ‖x‖ ^ 2) ^ (s / 2) 𝓕 f` for `f : Lp`. -/
-def ofLp (f : Lp F p (volume : Measure E)) : Sobolev E F s p where
+def ofLp (f : Lp F p (volume : Measure E)) : H^{s, p}(E, F) where
   toDistr := besselPotential E F (-s) f
   sobFn := f
   bessel_toDistr_eq_sobFn := by simp
@@ -322,25 +327,25 @@ theorem toDistr_ofLp (f : Lp F p (volume : Measure E)) :
     (ofLp s f).toDistr = besselPotential E F (-s) f := rfl
 
 @[simp]
-theorem ofLp_sobFn (f : Sobolev E F s p) :
+theorem ofLp_sobFn (f : H^{s, p}(E, F)) :
     ofLp s f.sobFn = f :=
   injective_sobFn E F s p rfl
 
 @[simp]
-theorem toLpₗ_apply (f : Sobolev E F s p) :
+theorem toLpₗ_apply (f : H^{s, p}(E, F)) :
     toLpₗ E F s p f = sobFn f := rfl
 
 instance instNormedAddCommGroup :
-    NormedAddCommGroup (Sobolev E F s p) :=
-  NormedAddCommGroup.induced (Sobolev E F s p) (Lp F p (volume : Measure E)) (toLpₗ E F s p)
+    NormedAddCommGroup (H^{s, p}(E, F)) :=
+  NormedAddCommGroup.induced (H^{s, p}(E, F)) (Lp F p (volume : Measure E)) (toLpₗ E F s p)
     (injective_sobFn E F s p)
 
 @[simp]
-theorem norm_sobFn_eq (f : Sobolev E F s p) : ‖f.sobFn‖ = ‖f‖ :=
+theorem norm_sobFn_eq (f : H^{s, p}(E, F)) : ‖f.sobFn‖ = ‖f‖ :=
   rfl
 
 instance instNormedSpace :
-    NormedSpace ℂ (Sobolev E F s p) where
+    NormedSpace ℂ (H^{s, p}(E, F)) where
   norm_smul_le c f := by
     simp_rw [← norm_sobFn_eq, ← norm_smul]
     rfl
@@ -348,7 +353,7 @@ instance instNormedSpace :
 variable (E F s p) in
 /-- The linear isometry equivalence between `H^s` and `Lp`. -/
 def toLpₗᵢ :
-    Sobolev E F s p ≃ₗᵢ[ℂ] Lp F p (volume : Measure E) where
+    H^{s, p}(E, F) ≃ₗᵢ[ℂ] Lp F p (volume : Measure E) where
   __ := toLpₗ E F s p
   invFun := ofLp s
   left_inv f := by simp
@@ -356,10 +361,10 @@ def toLpₗᵢ :
   norm_map' _ := rfl
 
 @[simp]
-theorem toLpₗᵢ_apply (f : Sobolev E F s p) :
+theorem toLpₗᵢ_apply (f : H^{s, p}(E, F)) :
     toLpₗᵢ E F s p f = sobFn f := rfl
 
-instance instCompleteSpace : CompleteSpace (Sobolev E F s p) :=
+instance instCompleteSpace : CompleteSpace (H^{s, p}(E, F)) :=
   (toLpₗᵢ E F s p).toIsometryEquiv.completeSpace
 
 open ContinuousLinearMap
@@ -379,7 +384,7 @@ theorem _root_.SchwartzMap.toLpFunctional_apply (f : 𝓢(E, ℂ)) (g : Lp F p) 
   filter_upwards [f.coeFn_toLp (1 - p⁻¹)⁻¹] with x hf
   simp [hf]
 
-theorem toDistr_apply (f : Sobolev E F s p) (u : 𝓢(E, ℂ)) :
+theorem toDistr_apply (f : H^{s, p}(E, F)) (u : 𝓢(E, ℂ)) :
     f.toDistr u = (𝓕 <| 𝓕⁻ u |>.smulLeftCLM ℂ fun x ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)).toLpFunctional F
       f.sobFn := by
   rw [SchwartzMap.toLpFunctional_apply, ← besselPotential_neg_sobFn_eq]
@@ -393,7 +398,7 @@ theorem toDistr_apply (f : Sobolev E F s p) (u : 𝓢(E, ℂ)) :
 
 variable (E F s p) in
 /-- The map from Sobolev functions `H^{s,p}` to `𝓢'` as a continuous linear map. -/
-def toTemperedDistributionCLM : Sobolev E F s p →L[ℂ] 𝓢'(E, F) where
+def toTemperedDistributionCLM : H^{s, p}(E, F) →L[ℂ] 𝓢'(E, F) where
   toFun f := f.toDistr
   map_add' := toDistr_add
   map_smul' := toDistr_smul
@@ -408,11 +413,13 @@ end Sobolev
 
 namespace SchwartzMap
 
+open scoped Sobolev
+
 variable {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
 
 variable (E F s p) in
 /-- The embedding of Schwartz functions into the Sobolev space. -/
-def toSobolev : 𝓢(E, F) →L[ℂ] Sobolev E F s p :=
+def toSobolev : 𝓢(E, F) →L[ℂ] H^{s, p}(E, F) :=
   (Sobolev.toLpₗᵢ E F s p).symm.toContinuousLinearEquiv.toContinuousLinearMap ∘L
   toLpCLM ℂ F p (volume : Measure E) ∘L
   SchwartzMap.fourierMultiplierCLM F (fun x ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (s / 2)))
@@ -459,10 +466,12 @@ end SchwartzMap
 
 namespace TemperedDistribution
 
+open scoped Sobolev
+
 variable {s : ℝ} {p : ℝ≥0∞} [hp : Fact (1 ≤ p)]
 
 /-- foo -/
-def MemSobolev.toSobolev {f : 𝓢'(E, F)} (hf : MemSobolev s p f) : Sobolev E F s p where
+def MemSobolev.toSobolev {f : 𝓢'(E, F)} (hf : MemSobolev s p f) : H^{s, p}(E, F) where
   toDistr := f
   sobFn := hf.choose
   bessel_toDistr_eq_sobFn := hf.choose_spec
@@ -498,18 +507,18 @@ namespace Sobolev
 
 variable {s : ℝ}
 
-theorem norm_fourier_sobFn_eq (f : Sobolev E F s 2) : ‖𝓕 f.sobFn‖ = ‖f‖ :=
+theorem norm_fourier_sobFn_eq (f : H^{s}(E, F)) : ‖𝓕 f.sobFn‖ = ‖f‖ :=
   LinearIsometryEquiv.norm_map' _ _
 
 instance instInnerProductSpace (s : ℝ) :
-    InnerProductSpace ℂ (Sobolev E F s 2) where
+    InnerProductSpace ℂ (H^{s}(E, F)) where
   inner f g := inner ℂ f.sobFn g.sobFn
   norm_sq_eq_re_inner f := norm_sq_eq_re_inner f.sobFn
   conj_inner_symm f g := by simp
   add_left f g h := by simp [inner_add_left]
   smul_left f g c := by simp [inner_smul_left]
 
-theorem smulLeftCLM_fourier_toDistr_eq {s : ℝ} (f : Sobolev E F s 2) :
+theorem smulLeftCLM_fourier_toDistr_eq {s : ℝ} (f : H^{s}(E, F)) :
     smulLeftCLM F (fun x ↦ ((1 + ‖x‖ ^ 2) ^ (s / 2) : ℝ)) (𝓕 f.toDistr) = 𝓕 f.sobFn := by
   have : (besselPotential E F s) f.toDistr = Lp.toTemperedDistribution f.sobFn :=
     f.bessel_toDistr_eq_sobFn
@@ -555,7 +564,7 @@ open MeasureTheory.Lp
 variable (E F) in
 /-- The *Sobolev embedding theorem* -/
 @[no_expose]
-def toZeroAtInfty (s : ℝ) : Sobolev E F s 2 →L[ℂ] C₀(E, F) :=
+def toZeroAtInfty (s : ℝ) : H^{s}(E, F) →L[ℂ] C₀(E, F) :=
   Real.Lp.fourierTransformInvZeroAtInftyCLM E F ∘L
   (blubb E F s) ∘L
   ((toLpₗᵢ E F s 2).trans (Lp.fourierTransformₗᵢ E F)).toContinuousLinearEquiv.toContinuousLinearMap
@@ -568,13 +577,13 @@ theorem fourierTransformₗᵢ_apply (f : Lp F 2 (volume : Measure E)) :
 theorem fourierTransformₗᵢ_symm_apply (f : Lp F 2 (volume : Measure E)) :
     (Lp.fourierTransformₗᵢ E F).symm f = 𝓕⁻ f := rfl
 
-theorem toZeroAtInfty_apply (hs : Module.finrank ℝ E < 2 * s) (f : Sobolev E F s 2) :
+theorem toZeroAtInfty_apply (hs : Module.finrank ℝ E < 2 * s) (f : H^{s}(E, F)) :
     toZeroAtInfty E F s f = Real.Lp.fourierTransformInvZeroAtInftyCLM E F
       ((memLp_ofReal_rpow_add_sq_norm hs).toLp • 𝓕 f.sobFn) := by
   simp [toZeroAtInfty, blubb_apply hs]
 
 theorem toZeroAtInfty_apply_toTemperedDistribution (hs : Module.finrank ℝ E < 2 * s)
-    (f : Sobolev E F s 2) :
+    (f : H^{s}(E, F)) :
     (toZeroAtInfty E F s f).toBCF.toTemperedDistribution = f.toDistr := calc
   _ = 𝓕⁻ (Lp.toTemperedDistribution ((memLp_ofReal_rpow_add_sq_norm hs).toLp • 𝓕 f.sobFn)) := by
     simp [toZeroAtInfty_apply hs, Lp.fourierInv_toTemperedDistributionCLM_eq]
@@ -676,7 +685,7 @@ end Trace
 @[no_expose]
 def fourierMultiplierCLM (s s' C : ℝ) (g : E → ℂ)
     (hg₁ : g.HasTemperateGrowth) (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) :
-    Sobolev E F s 2 →L[ℂ] Sobolev E F s' 2 :=
+    H^{s}(E, F) →L[ℂ] Sobolev E F s' 2 :=
   ((toLpₗᵢ E F s' 2).trans (Lp.fourierTransformₗᵢ E F)
     |>.symm.toContinuousLinearEquiv.toContinuousLinearMap) ∘L
   foo' (s - s') C hg₁ hg₂ ∘L
@@ -685,13 +694,13 @@ def fourierMultiplierCLM (s s' C : ℝ) (g : E → ℂ)
 @[simp]
 private
 theorem fourierMultiplierCLM_sobFn {s : ℝ} (s' C : ℝ) {g : E → ℂ} (hg₁ : g.HasTemperateGrowth)
-    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) (f : Sobolev E F s 2) :
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) (f : H^{s}(E, F)) :
     (f.fourierMultiplierCLM s s' C g hg₁ hg₂).sobFn = 𝓕⁻ (foo' (s - s') C hg₁ hg₂ (𝓕 f.sobFn)) :=
   rfl
 
 @[simp]
 theorem fourierMultiplierCLM_toDistr {s : ℝ} (s' C : ℝ) {g : E → ℂ} (hg₁ : g.HasTemperateGrowth)
-    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) (f : Sobolev E F s 2) :
+    (hg₂ : ∀ x, ‖g x‖ ≤ C * (1 + ‖x‖ ^ 2) ^ ((s - s') / 2)) (f : H^{s}(E, F)) :
     (f.fourierMultiplierCLM s s' C g hg₁ hg₂).toDistr = f.toDistr.fourierMultiplierCLM F g := by
   rw [← besselPotential_neg_sobFn_eq, fourierMultiplierCLM_sobFn,
     ← Lp.fourierInv_toTemperedDistribution_eq,
@@ -704,7 +713,7 @@ variable (E F) in
 /-- Monotonicity -/
 @[no_expose]
 def mono (s s' : ℝ) :
-    Sobolev E F s 2 →L[ℂ] Sobolev E F s' 2 :=
+    H^{s}(E, F) →L[ℂ] H^{s'}(E, F) :=
   if h : s' ≤ s then
     fourierMultiplierCLM s s' 1 (fun _ ↦ 1) (by fun_prop) (fun _ ↦ ?_)
   else
@@ -715,7 +724,7 @@ where finally
 
 variable {s' : ℝ}
 
-theorem mono_apply (h : s' ≤ s) (f : Sobolev E F s 2) : (f.mono E F s s').toDistr = f.toDistr := by
+theorem mono_apply (h : s' ≤ s) (f : H^{s}(E, F)) : (f.mono E F s s').toDistr = f.toDistr := by
   simp [mono, h]
 
 theorem _root_.SchwartzMap.toSobolev_mono (f : 𝓢(E, F)) (s s' : ℝ) (hs : s' ≤ s) :
@@ -734,7 +743,7 @@ theorem denseRange_mono (h : s' ≤ s) : DenseRange (Sobolev.mono E F s s') := b
   ext f : 1
   simp [f.toSobolev_mono _ _ h]
 
-theorem mono_apply_eq_zero_of_lt (h : s < s') (f : Sobolev E F s 2) :
+theorem mono_apply_eq_zero_of_lt (h : s < s') (f : H^{s}(E, F)) :
     (f.mono E F s s').toDistr = 0 := by
   have h : ¬ s' ≤ s := by grind
   simp [mono, h]
@@ -743,7 +752,7 @@ open LineDeriv Laplacian Real
 
 variable (F) in
 /-- Partial derivative -/
-def lineDerivOp (s : ℝ) (m : E) : Sobolev E F s 2 →L[ℂ] Sobolev E F (s - 1) 2 :=
+def lineDerivOp (s : ℝ) (m : E) : H^{s}(E, F) →L[ℂ] H^{s - 1}(E, F) :=
   (2 * π * Complex.I) • (fourierMultiplierCLM s (s - 1) ‖m‖ (fun x ↦ Complex.ofReal <| inner ℝ x m)
     ?_ ?_)
 where finally
@@ -760,14 +769,14 @@ where finally
         rw [← Real.rpow_mul (by positivity)]; simp
       _ = _ := by simp
 
-instance instLineDeriv (s : ℝ) : LineDeriv E (Sobolev E F s 2) (Sobolev E F (s - 1) 2) where
+instance instLineDeriv (s : ℝ) : LineDeriv E H^{s}(E, F) H^{s - 1}(E, F) where
   lineDerivOp m f := f.lineDerivOp F s m
 
 @[simp]
-theorem lineDerivOp_apply (m : E) (f : Sobolev E F s 2) : f.lineDerivOp F s m = ∂_{m} f := rfl
+theorem lineDerivOp_apply (m : E) (f : H^{s}(E, F)) : f.lineDerivOp F s m = ∂_{m} f := rfl
 
 @[simp]
-theorem lineDerivOp_toDistr (m : E) {s : ℝ} (f : Sobolev E F s 2) :
+theorem lineDerivOp_toDistr (m : E) {s : ℝ} (f : H^{s}(E, F)) :
     (∂_{m} f).toDistr = ∂_{m} f.toDistr := by
   rw [← lineDerivOp_apply, lineDerivOp, smul_apply,
     toDistr_smul, fourierMultiplierCLM_toDistr,
@@ -775,21 +784,26 @@ theorem lineDerivOp_toDistr (m : E) {s : ℝ} (f : Sobolev E F s 2) :
 
 variable (E F) in
 /-- The laplacian -/
-def laplacian (s : ℝ) : Sobolev E F s 2 →L[ℂ] Sobolev E F (s - 2) 2 :=
+def laplacian (s : ℝ) : H^{s}(E, F) →L[ℂ] H^{s - 2}(E, F) :=
   -(2 * π) ^ 2 • (fourierMultiplierCLM s (s - 2) 1 (fun x ↦ Complex.ofReal <| ‖x‖ ^ 2) ?_ ?_)
 where finally
   · fun_prop
   · simp
 
-instance instLaplacian (s : ℝ) : Laplacian (Sobolev E F s 2) (Sobolev E F (s - 2) 2) where
+instance instLaplacian (s : ℝ) : Laplacian H^{s}(E, F) H^{s - 2}(E, F) where
   laplacian f := f.laplacian E F s
 
 @[simp]
-theorem laplacian_apply (f : Sobolev E F s 2) : f.laplacian E F s = Δ f := rfl
+theorem laplacian_apply (f : H^{s}(E, F)) : f.laplacian E F s = Δ f := rfl
+
+example (f : H^{2}(E, F)) (g : H^{0}(E, F)) (h : (Δ f).toDistr = g.toDistr) :
+    (Δ f).copy 0 = g := by
+  ext : 1
+  simpa
 
 set_option backward.isDefEq.respectTransparency false in -- because of real-complex nonsense
 @[simp]
-theorem laplacian_toDistr {s : ℝ} (f : Sobolev E F s 2) : (Δ f).toDistr = Δ f.toDistr := by
+theorem laplacian_toDistr {s : ℝ} (f : H^{s}(E, F)) : (Δ f).toDistr = Δ f.toDistr := by
   rw [← laplacian_apply, laplacian, smul_apply,
     toDistr_smul, fourierMultiplierCLM_toDistr,
     laplacian_eq_fourierMultiplierCLM]
@@ -801,7 +815,7 @@ theorem laplacian_toSobolev (f : 𝓢(E, F)) :
 
 variable (E) in
 /-- Delta distribution -/
-private def deltaAux (s : ℝ) (hs : 2 * s < -Module.finrank ℝ E) : Sobolev E ℂ s 2 where
+private def deltaAux (s : ℝ) (hs : 2 * s < -Module.finrank ℝ E) : H^{s}(E) where
   toDistr := TemperedDistribution.delta (0 : E)
   sobFn := 𝓕⁻ (MeasureTheory.Lp.memLp_ofReal_rpow_add_sq_norm (s := -s) (by grind)).toLp
   bessel_toDistr_eq_sobFn := by
@@ -824,7 +838,7 @@ private def deltaAux (s : ℝ) (hs : 2 * s < -Module.finrank ℝ E) : Sobolev E 
 variable (E s) in
 /-- Delta distribution -/
 @[no_expose]
-def delta : Sobolev E ℂ s 2 :=
+def delta : H^{s}(E) :=
   if hs : 2 * s < -Module.finrank ℝ E then deltaAux E s hs else 0
 
 theorem delta_toDistr (hs : 2 * s < -Module.finrank ℝ E) :

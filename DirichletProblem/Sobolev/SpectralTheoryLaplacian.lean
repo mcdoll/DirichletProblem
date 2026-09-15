@@ -55,8 +55,8 @@ variable (E F) in
 /-- The Laplacian as a unbounded operator. -/
 def ConcreteLinearPMap.laplacian :
     ConcreteLinearPMap (RingHom.id ℂ) (Sobolev E F 2 2) (Lp (α := E) F 2) (Lp (α := E) F 2) where
-  toFun := (Sobolev.toLpₗ E F (2 - 2) 2) ∘ₗ (Sobolev.laplacian E F 2).toLinearMap
-  emb := (Sobolev.toLpₗ E F 0 2) ∘ₗ (Sobolev.mono E F 2 0).toLinearMap
+  toFun := Sobolev.toLpₗ E F (2 - 2) 2 ∘ₗ Sobolev.laplacian E F 2
+  emb := Sobolev.toLpₗ E F 0 2 ∘ₗ Sobolev.mono E F 2 0
   inj := by
     simp only [LinearMap.coe_comp, ContinuousLinearMap.coe_coe]
     rw [Function.Injective.of_comp_iff]
@@ -122,9 +122,7 @@ theorem LinearPMap.isSymmetric_laplacian : IsSymmetric (LinearPMap.laplacian E F
   | hp =>
     exact isClosed_eq (by fun_prop) (by fun_prop)
   | h f g =>
-    simp only [ConcreteLinearPMap.laplacian_toFun_toSobolev,
-      ConcreteLinearPMap.laplacian_emb_toSobolev, SchwartzMap.inner_toL2_toL2_eq]
-    apply (SchwartzMap.integral_inner_laplacian_right_eq_left f g).symm
+    simpa using (SchwartzMap.integral_inner_laplacian_right_eq_left f g).symm
 
 theorem ConcreteLinearPMap.denseRange_laplacian :
     DenseRange (ConcreteLinearPMap.laplacian E F).emb := by

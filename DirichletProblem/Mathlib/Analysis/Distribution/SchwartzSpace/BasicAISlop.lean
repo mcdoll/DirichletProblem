@@ -30,14 +30,34 @@ private lemma norm_iteratedFDeriv_comp_smul (g : 𝓢(E, 𝕜)) (r : ℝ) (i : �
       |r⁻¹| ^ i * ‖iteratedFDeriv ℝ i g (r⁻¹ • x)‖ := by sorry
 
 private lemma schwartz_mvt_bound (g : 𝓢(E, 𝕜)) (y : E) :
-    ‖g y - g 0‖ ≤ (SchwartzMap.seminorm 𝕜 0 1 g) * ‖y‖ := by sorry
+    ‖g y - g 0‖ ≤ (SchwartzMap.seminorm 𝕜 0 1 g) * ‖y‖ := by
+  have h_mvt : ∀ z : E, ‖fderiv ℝ g z‖ ≤ SchwartzMap.seminorm 𝕜 0 1 g := by
+    intro z
+    have h_diff : ‖iteratedFDeriv ℝ 1 g z‖ ≤ (SchwartzMap.seminorm 𝕜 0 1 g) := by
+      exact norm_iteratedFDeriv_le_seminorm 𝕜 g 1 z;
+    convert h_diff using 1;
+    exact Eq.symm (norm_iteratedFDeriv_one ⇑g);
+  --grw [← h_mvt]
+  --apply?
+  have := @Convex.norm_image_sub_le_of_norm_fderiv_le;
+  specialize this ( show ∀ x ∈ Set.univ, DifferentiableAt ℝ g x from fun x _ => g.differentiableAt ) ( show ∀ x ∈ Set.univ, ‖fderiv ℝ g x‖ ≤ SchwartzMap.seminorm 𝕜 0 1 g from fun x _ => h_mvt x ) ( convex_univ ) ( Set.mem_univ 0 ) ( Set.mem_univ y ) ; simp_all +decide [ norm_sub_rev ] ;
 
 /-
 Helper: for i ≥ 1, iteratedFDeriv of (g ∘ scale - 1) equals iteratedFDeriv of (g ∘ scale)
 -/
 private lemma iteratedFDeriv_sub_const (g : 𝓢(E, 𝕜)) (r : ℝ) (i : ℕ) (hi : 1 ≤ i) (x : E) :
     iteratedFDeriv ℝ i (fun x => g (r⁻¹ • x) - 1) x =
-    iteratedFDeriv ℝ i (fun x => g (r⁻¹ • x)) x := by sorry
+    iteratedFDeriv ℝ i (fun x => g (r⁻¹ • x)) x := by
+  induction i generalizing x with
+  | zero =>
+    ext x
+    simp at hi
+  | succ n hn =>
+    sorry
+  · ext; simp [iteratedFDeriv_succ_const];
+    rw [ fderiv_sub_const ];
+  · simp +decide only [iteratedFDeriv_succ_eq_comp_left];
+    rw [ show iteratedFDeriv ℝ i ( fun x => g ( r⁻¹ • x ) - 1 ) = iteratedFDeriv ℝ i ( fun x => g ( r⁻¹ • x ) ) from funext ih ]
 
 /-
 The main seminorm bound

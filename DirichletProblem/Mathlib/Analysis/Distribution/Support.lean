@@ -71,7 +71,7 @@ theorem dsupport_smul (c : ℂ) : dsupport (c • f) ⊆ dsupport f := by
   rw [← Set.compl_subset_compl]
   intro u hu
   simp only [Set.mem_compl_iff, notMem_dsupport_iff] at hu ⊢
-  peel hu with s hs
+  gconvert hu with s hs
   grind
 
 theorem bar' {u : 𝓢'(E, F)} : IsVanishingOn u (dsupport u)ᶜ := by
