@@ -28,6 +28,7 @@ open scoped LineDeriv Laplacian
 
 variable {μ : Measure E} [μ.IsAddHaarMeasure]
 
+/-- Local instance of a real inner product space. -/
 local instance InnerProductSpace.instRCLikeToReal : InnerProductSpace ℝ F :=
   InnerProductSpace.rclikeToReal 𝕜 F
 

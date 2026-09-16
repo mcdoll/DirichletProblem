@@ -263,6 +263,7 @@ theorem Sobolev.defectOp_toDistr (c C : ℝ) (f : E → ℝ) (hC : 0 < C) (hc : 
 
 open Real
 
+/-- The operator with Fourier multiplier `(c • I - (2 * π) ^ 2 * ‖x‖ ^ 2)⁻¹`. -/
 def Sobolev.defectOpLaplacian (c : ℝ) (hc : c ≠ 0) (u : Lp (α := E) F 2) : Sobolev E F 2 2 :=
   defectOp c 1 (fun x ↦ -(2 * π) ^ 2 * ‖x‖ ^ 2) ?_ hc ?_ ?_ u
 where finally
