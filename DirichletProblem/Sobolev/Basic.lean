@@ -92,12 +92,8 @@ variable {s : ℝ}
 
 theorem _root_.MeasureTheory.Lp.memLp_rpow_add_sq_norm (hs : Module.finrank ℝ E < 2 * s) :
     MemLp (fun x : E ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)) 2 := by
-  constructor
-  · have : (fun x : E ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)).HasTemperateGrowth := by
-      fun_prop
-    exact this.1.continuous.aestronglyMeasurable
-  · rw [eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)]
-    suffices h : ∫⁻ a : E, ENNReal.ofReal ‖(1 + ‖a‖ ^ 2) ^ (-s)‖ < ⊤ from by
+  rw [memLp_iff, eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)]
+  · suffices h : ∫⁻ a : E, ENNReal.ofReal ‖(1 + ‖a‖ ^ 2) ^ (-s)‖ < ⊤ from by
       norm_cast
       simp_rw [ofReal_norm] at h
       simp_rw [← enorm_pow]
@@ -109,6 +105,9 @@ theorem _root_.MeasureTheory.Lp.memLp_rpow_add_sq_norm (hs : Module.finrank ℝ 
     rw [Real.norm_eq_abs, abs_eq_self.mpr (by positivity)]
     congr
     ring
+  · have : (fun x : E ↦ (1 + ‖x‖ ^ 2) ^ (-s / 2)).HasTemperateGrowth := by
+      fun_prop
+    exact this.1.continuous.aestronglyMeasurable
 
 theorem _root_.MeasureTheory.Lp.memLp_ofReal_rpow_add_sq_norm (hs : Module.finrank ℝ E < 2 * s) :
     MemLp (fun x : E ↦ Complex.ofReal ((1 + ‖x‖ ^ 2) ^ (-s / 2) : ℝ)) 2 := by

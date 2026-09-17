@@ -33,9 +33,10 @@ def toLpTop : (α →ᵇ E) →L[𝕜] Lp E ⊤ μ :=
         simp only [coe_smul, RingHom.id_apply] -- `coe_smul` is bad, should be `↑(c • f) = c • ↑f`
         apply MeasureTheory.MemLp.toLp_const_smul } 1 <| by
     intro f
-    simp only [LinearMap.coe_mk, AddHom.coe_mk, Lp.norm_toLp, eLpNorm_exponent_top, one_mul]
+    simp only [LinearMap.coe_mk, AddHom.coe_mk, Lp.norm_toLp, one_mul]
     rw [← ENNReal.ofReal_le_ofReal_iff (by positivity),
-      ENNReal.ofReal_toReal (by apply (memLp_top f).eLpNorm_ne_top)]
+      ENNReal.ofReal_toReal (memLp_top f).eLpNorm_ne_top,
+      eLpNorm_exponent_top f.continuous.aestronglyMeasurable]
     grind [eLpNormEssSup_le_of_ae_bound, Eventually.of_forall, norm_coe_le_norm]
 
 @[simp]
